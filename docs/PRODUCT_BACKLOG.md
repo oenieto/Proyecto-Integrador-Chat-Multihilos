@@ -1,0 +1,9 @@
+# Product Backlog: Servidor de Chat Web
+
+| ID  | Historia de Usuario                                                                    | Prioridad | Criterios de Aceptación                                                                                                             |
+| --- | -------------------------------------------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Como usuario, quiero ver una página de registro para crear mi cuenta en el chat.       | Alta      | - La página carga y muestra un formulario para nombre, teléfono, email y contraseña. <br>- Al hacer clic en "Confirmar", se crea mi cuenta. |
+| 2   | Como usuario, quiero poder iniciar sesión después de tener una cuenta.                 | Alta      | - Hay una página o formulario de inicio de sesión. <br>- Al ingresar mis credenciales, entro a la sala de chat principal. |
+| 3   | Como usuario, quiero ver la interfaz principal del chat después de iniciar sesión.       | Alta      | - Veo un área principal para mensajes, una lista de usuarios y un campo para escribir. <br>- La interfaz es limpia y moderna. |
+| 4   | Como usuario, quiero enviar un mensaje y que todos los demás en la sala lo vean.        | Media     | - Al presionar "Enviar", mi mensaje aparece en el área de chat. <br>- Los demás usuarios ven mi mensaje aparecer en tiempo real. |
+| 5   | Como usuario, quiero ver quién está conectado en la sala de chat.                        | Media     | - Hay una lista visible con los nicks de todos los usuarios actualmente conectados. |
