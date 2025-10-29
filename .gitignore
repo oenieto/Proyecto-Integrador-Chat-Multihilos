@@ -1,0 +1,9 @@
+# Virtual Environments
+.venv/
+
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+
+# Python IDEs
+.vscode/
