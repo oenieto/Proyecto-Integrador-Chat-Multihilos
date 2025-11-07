@@ -1,11 +1,23 @@
 {% extends "base.html" %}
+{% set body_class = 'auth-body' %}
 {% block title %}Chats{% endblock %}
 {% block content %}
-<h2>Chats</h2>
-<ul class="room-list">
-  {% for r in rooms %}
-    <li><a href="{{ url_for('main.chat', room_id=r.id) }}">{{ r.name }}</a></li>
-  {% endfor %}
-</ul>
-{% endblock %}
+<div class="auth-shell">
+  <section class="auth-panel glass wide">
+    <h2 class="auth-title">Tus chats</h2>
 
+    <form class="newchat newchat-inline" action="{{ url_for('main.create_room') }}" method="post">
+      <input class="newchat-input" name="room_name" placeholder="Nombre de la conversación">
+      <button class="btn btn-primary btn-glow" type="submit">➕ Iniciar conversación</button>
+    </form>
+
+    <ul class="list glass-list">
+      {% for r in rooms %}
+        <li><a class="row" href="{{ url_for('main.chat', room_id=r.id) }}"><span>{{ r.name }}</span> →</a></li>
+      {% endfor %}
+    </ul>
+
+    <a class="link" href="{{ url_for('main.index') }}">Volver al inicio</a>
+  </section>
+</div>
+{% endblock %}

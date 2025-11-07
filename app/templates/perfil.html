@@ -1,7 +1,20 @@
 {% extends "base.html" %}
+{% set body_class = 'auth-body' %}
 {% block title %}Perfil{% endblock %}
 {% block content %}
-<h2>Perfil</h2>
-<p><b>Nombre:</b> {{ current_user.name }}</p>
-<p><b>Email:</b> {{ current_user.email }}</p>
+<div class="auth-shell">
+  <section class="perfil-section glass">
+    <div class="perfil-avatar">
+      <img src="{{ current_user.avatar_url or 'https://i.pravatar.cc/200' }}" alt="avatar">
+      <button class="btn-link">Cambiar foto</button>
+    </div>
+    <div class="perfil-form">
+      <label>Nombre</label>
+      <input value="{{ current_user.name }}" readonly>
+      <label>Email</label>
+      <input value="{{ current_user.email }}" readonly>
+      <a class="btn btn-secondary" href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+    </div>
+  </section>
+</div>
 {% endblock %}

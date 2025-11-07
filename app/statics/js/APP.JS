@@ -1,22 +1,20 @@
-// Cliente Socket.IO para la vista de chat
 document.addEventListener('DOMContentLoaded', () => {
-  // Solo corre en la página de chat (donde definimos ROOM_ID)
-  if (typeof ROOM_ID === 'undefined') return;
+  const boot = document.getElementById('boot');
+  if (!boot) return; // no estamos en chat
 
-  // Conexión
-  const socket = io(); // mismo host/puerto
+  const CURRENT_USER_ID = parseInt(boot.dataset.uid, 10);
+  const ROOM_ID = parseInt(boot.dataset.room, 10);
 
-  // Elementos del DOM (IDs que acordamos)
+  const socket = io();
+
   const messageForm = document.getElementById('message-form');
   const messageInput = document.getElementById('message-input');
   const messagesDiv = document.getElementById('messages');
 
-  // Al conectar, únete a la sala actual
   socket.on('connect', () => {
     socket.emit('join', { room_id: ROOM_ID });
   });
 
-  // Enviar mensaje (evento 'message' que maneja el server)
   if (messageForm) {
     messageForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -27,25 +25,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Recibir mensajes del servidor
   socket.on('message', (data) => {
-    const time = new Date(data.ts || Date.now()).toLocaleTimeString();
+    const isMine = data.user_id === CURRENT_USER_ID;
     const el = document.createElement('div');
-    el.className = 'msg';
-    el.innerHTML = `<b>${data.user || 'Usuario'}</b> <span class="time">${time}</span><p>${data.body}</p>`;
+    el.className = 'message ' + (isMine ? 'sent' : 'received') + ' appear';
+    const time = new Date(data.ts || Date.now()).toLocaleTimeString();
+    el.innerHTML = `
+      <strong>${data.user || 'Usuario'}</strong>
+      <span class="timestamp">[${time}]</span>
+      <div>${data.body}</div>
+    `;
     messagesDiv.appendChild(el);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    setTimeout(() => el.classList.remove('appear'), 400);
   });
 
-  // Mensajes de sistema (opcional)
   socket.on('system', (data) => {
     const el = document.createElement('div');
-    el.className = 'msg';
-    el.innerHTML = `<i>${data.msg}</i>`;
+    el.className = 'message received appear';
+    el.innerHTML = `<em>${data.msg}</em>`;
     messagesDiv.appendChild(el);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    setTimeout(() => el.classList.remove('appear'), 400);
   });
-
-  // Scroll al final al cargar
-  if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });

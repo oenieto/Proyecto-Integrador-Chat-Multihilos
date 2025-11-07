@@ -1,14 +1,41 @@
 {% extends "base.html" %}
-{% block title %}Registro{% endblock %}
+{% set body_class = 'auth-body' %}
+{% block title %}Crear cuenta{% endblock %}
 {% block content %}
-<div class="auth-card">
-  <h2>Crear cuenta</h2>
-  <form method="post" action="{{ url_for('auth.register_post') }}">
-    <input name="name" placeholder="Tu nombre" required>
-    <input type="email" name="email" placeholder="Tu correo" required>
-    <input type="password" name="password" placeholder="Contraseña" required>
-    <button type="submit">Crear</button>
-  </form>
-  <p class="muted"><a href="{{ url_for('auth.login') }}">¿Ya tienes cuenta? Inicia sesión</a></p>
+<div class="auth-shell xl">
+  <section class="auth-panel glass huge">
+    <h1 class="branding"><span class="gradient-text">Nombre de la aplicación</span></h1>
+    <h2 class="auth-title">Crear cuenta</h2>
+    <p class="auth-subtitle">Completa tus datos</p>
+
+    <form class="auth-form" method="post" action="{{ url_for('auth.register_post') }}">
+      <div class="field"><input name="name" placeholder="Nombre" required></div>
+      <div class="field"><input type="email" name="email" placeholder="Correo" required></div>
+      <div class="field"><input type="password" name="password" placeholder="Contraseña" required></div>
+      <button class="btn btn-primary btn-glow big" type="submit">Crear cuenta</button>
+    </form>
+
+    <a class="link" href="{{ url_for('auth.login') }}">¿Ya tienes cuenta? Inicia sesión</a>
+  </section>
+
+  <aside class="auth-hero jumbo">
+    <div class="mascot glass lift">
+      <svg viewBox="0 0 200 200" class="bot">
+        <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7e49ff"/><stop offset="1" stop-color="#5aa0ff"/>
+        </linearGradient></defs>
+        <rect x="40" y="40" width="120" height="90" rx="18" fill="url(#g2)" />
+        <circle cx="80" cy="80" r="10" fill="#fff"><animate attributeName="r" values="10;8;10" dur="2s" repeatCount="indefinite"/></circle>
+        <circle cx="120" cy="80" r="10" fill="#fff"><animate attributeName="r" values="10;8;10" dur="2.2s" repeatCount="indefinite"/></circle>
+        <line x1="100" y1="30" x2="100" y2="10" stroke="#cfd4ff" stroke-width="4"><animate attributeName="y2" values="10;6;10" dur="1.8s" repeatCount="indefinite"/></line>
+        <circle cx="100" cy="8" r="6" fill="#cfd4ff"><animate attributeName="cy" values="8;5;8" dur="1.8s" repeatCount="indefinite"/></circle>
+        <rect x="55" y="120" width="90" height="40" rx="12" fill="rgba(255,255,255,.15)"/>
+      </svg>
+      <div class="mascot-caption">
+        <div class="bubble other">¡Bienvenido! 💫</div>
+        <div class="bubble you">Crearé tu cuenta al toque</div>
+      </div>
+    </div>
+  </aside>
 </div>
 {% endblock %}

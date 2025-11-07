@@ -1,3 +1,4 @@
+# app/main/events.py
 from flask_socketio import join_room, emit
 from flask_login import current_user
 from ..models import db, Message
@@ -19,6 +20,7 @@ def register_socketio_handlers(socketio):
         db.session.add(msg)
         db.session.commit()
         emit("message", {
+            "user_id": current_user.id,   # <-- añadido
             "user": current_user.name,
             "body": msg.body,
             "ts": msg.created_at.isoformat()

@@ -1,13 +1,22 @@
 {% extends "base.html" %}
+{% set body_class = 'auth-body' %}
 {% block title %}Inicio{% endblock %}
 {% block content %}
-<h1>Bienvenido/a, {{ current_user.name }}</h1>
-<p>Elige un chat para comenzar:</p>
-<ul class="room-list">
-  {% for r in rooms %}
-    <li><a href="{{ url_for('main.chat', room_id=r.id) }}">{{ r.name }}</a></li>
-  {% else %}
-    <li>No hay salas aún.</li>
-  {% endfor %}
-</ul>
+<div class="auth-shell">
+  <section class="auth-panel glass">
+    <h2 class="auth-title">Hola, {{ current_user.name }}</h2>
+    <p class="auth-subtitle">Elige un chat para comenzar</p>
+    <ul class="list glass-list">
+      {% for r in rooms %}
+        <li><a class="row" href="{{ url_for('main.chat', room_id=r.id) }}"><span>{{ r.name }}</span> →</a></li>
+      {% else %}
+        <li><span>No hay salas aún</span></li>
+      {% endfor %}
+    </ul>
+    <div class="actions-inline">
+      <a class="link" href="{{ url_for('main.chats') }}">Ver todos los chats</a>
+      <a class="link" href="{{ url_for('auth.logout') }}">Salir</a>
+    </div>
+  </section>
+</div>
 {% endblock %}
