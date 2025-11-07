@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Chat - {{ room.name }}{% endblock %}
+{% block content %}
+<div class="chat-layout">
+  <aside class="sidebar">
+    <h3>Chats</h3>
+    <a class="back" href="{{ url_for('main.chats') }}">← Volver</a>
+  </aside>
+
+  <section class="messages">
+    <div id="messages">
+      {% for m in messages %}
+        <div class="msg">
+          <b>{{ m.user.name }}</b>
+          <span class="time">{{ m.created_at.strftime("%H:%M") }}</span>
+          <p>{{ m.body }}</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- OJO: IDs que tu JS espera -->
+    <form id="message-form">
+      <input id="message-input" placeholder="Escribe un mensaje..." autocomplete="off">
+      <button>Enviar</button>
+    </form>
+  </section>
+</div>
+
+<!-- Define variables globales que usa el JS -->
+<script>
+  const CURRENT_USER_ID = {{ current_user.id|int }};
+  const ROOM_ID = {{ room.id|int }};
+</script>
+{% endblock %}

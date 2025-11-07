@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
+{% block content %}
+<h1>Bienvenido/a, {{ current_user.name }}</h1>
+<p>Elige un chat para comenzar:</p>
+<ul class="room-list">
+  {% for r in rooms %}
+    <li><a href="{{ url_for('main.chat', room_id=r.id) }}">{{ r.name }}</a></li>
+  {% else %}
+    <li>No hay salas aún.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

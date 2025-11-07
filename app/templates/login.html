@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h2>Iniciar Sesión</h2>
+  <p class="muted">Ingresa tu correo electrónico</p>
+  <form method="post" action="{{ url_for('auth.login_post') }}">
+    <input type="email" name="email" placeholder="Your email address" required>
+    <input type="password" name="password" placeholder="Your password" required>
+    <button type="submit">Continuar</button>
+  </form>
+  <p class="muted"><a href="{{ url_for('auth.register') }}">Crear cuenta</a></p>
+</div>
+{% endblock %}
