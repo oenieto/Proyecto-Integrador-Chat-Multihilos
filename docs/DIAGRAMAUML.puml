@@ -1,0 +1,99 @@
+@startuml
+' --- Título General ---
+title Diagrama de Arquitectura y Datos - App "Wavvi"
+
+' --- Configuración visual (opcional, para que se vea bien) ---
+skinparam linetype ortho
+skinparam componentStyle uml2
+skinparam classAttributeIconSize 0
+skinparam defaultFontName "Inter"
+skinparam defaultClassFontColor "#E9E9EB"
+skinparam defaultFontColor "#E9E9EB"
+skinparam backgroundcolor "#0E0E12"
+skinparam stereotypeCBackgroundColor "#5B4DA8"
+skinparam componentBorderColor "#5B4DA8"
+skinparam classBorderColor "#5B4DA8"
+skinparam databaseBorderColor "#5B4DA8"
+skinparam agentBorderColor "#5B4DA8"
+skinparam noteBorderColor "#5B4DA8"
+
+' ===============================================
+' === 1. ARQUITECTURA (Diagrama de Componentes) ===
+' ===============================================
+note "1. Arquitectura de Componentes" as N_Arch
+
+node "Cliente (Navegador)" {
+    
+    ' --- ESTA LÍNEA FUE CORREGIDA ---
+    component [Plantillas Jinja] as Web {
+        [index.html]
+        [login.html]
+        [chat.html]
+        [perfil.html]
+    }
+    
+    component [Lógica de Cliente (app.js)] as JS
+    
+    Web -right- JS : (Dispara eventos)
+}
+
+node "Servidor Wavvi (Flask)" {
+    
+    component [Auth Blueprint] as Auth
+    component [Main Blueprint] as Main
+    component [Socket.IO Server] as SocketIO
+    
+    Main -left- Auth : (Usa rutas)
+    Main -- SocketIO : (Maneja eventos)
+}
+
+database "Base de Datos (instance/chat.db)" as DB
+
+' --- Relaciones de Arquitectura ---
+Web .right.> Main : (HTTP GET/POST)
+Web .right.> Auth : (HTTP POST)
+JS ..up..> SocketIO : (WebSocket - 'emit')
+SocketIO ..down..> JS : (WebSocket - 'on')
+
+Auth .down.> DB : (Lee/Escribe User)
+Main .down.> DB : (Lee/Escribe Room, Message)
+SocketIO .down.> DB : (Escribe Message)
+
+
+' ===============================================
+' === 2. DATOS (Diagrama de Clases / models.py) ===
+' ===============================================
+note "2. Modelo de Datos (models.py)" as N_Data
+
+class User {
+  +id: Integer
+  +email: String
+  +name: String
+  -password_hash: String
+  --
+  +set_password(password)
+  +check_password(password)
+  +avatar(size)
+}
+
+class Room {
+  +id: Integer
+  +name: String
+  +is_private: Boolean
+  --
+  +room_avatar(size)
+}
+
+class Message {
+  +id: Integer
+  +body: Text
+  +created_at: DateTime
+  +user_id (FK)
+  +room_id (FK)
+}
+
+' --- Relaciones de Datos ---
+User "1" -- "0..*" Message : (envía)
+Room "1" -- "0..*" Message : (contiene)
+
+@enduml
