@@ -1,0 +1,605 @@
+:root{
+  --bg:#070710;
+  --panel:#0d0f1f;
+  --ink:#eef1ff;
+  --muted:#98a0c8;
+  --blue:#5aa0ff;
+  --purple:#8b5dff;              /* protagonista */
+  --accent:linear-gradient(90deg,#7e49ff,#5aa0ff);
+}
+
+/* Fondo con halos y animación */
+*{box-sizing:border-box}
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:'Inter',
+  system-ui,Segoe UI,Arial;
+  background:var(--bg);
+  height: 100vh;
+  overflow: hidden;
+}
+
+body::before,body::after{
+  content:""; position:fixed; inset:-25vmax; z-index:-2; filter:blur(70px);
+  background: conic-gradient(from 0deg at 30% 30%, rgba(31, 104, 146, 0.28), rgba(90,160,255,.18), transparent 60%);
+  animation: spin 30s linear infinite;
+}
+body::after{
+  background: radial-gradient(45% 45% at 80% 20%, rgba(126,73,255,.28), transparent 60%),
+              radial-gradient(45% 45% at 10% 80%, rgba(90,160,255,.20), transparent 60%);
+  animation: float 14s ease-in-out infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes float{0%,100%{transform:translateY(-2%)}50%{transform:translateY(2%)}}
+
+/* Utilidades */
+.gradient-text{background:linear-gradient(90deg,#a98dff,#6aa9ff); -webkit-background-clip:text; background-clip:text; color:transparent}
+.glass{background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); backdrop-filter:blur(12px); border-radius:22px; box-shadow:0 20px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06)}
+.lift{transform:translateY(6px); animation:rise .6s ease-out both}
+@keyframes rise{from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(6px)}}
+
+.btn{padding:12px 16px; border-radius:12px; border:0; font-weight:600; cursor:pointer}
+.btn-primary{background:linear-gradient(90deg,#7e49ff,#5aa0ff); color:#fff; box-shadow:0 10px 28px rgba(126,73,255,.35)}
+.btn-primary.btn-glow{box-shadow:0 0 0 0 rgba(126,73,255,.55); animation:pulse 2.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(126,73,255,.55)}70%{box-shadow:0 0 0 12px rgba(126,73,255,0)}100%{box-shadow:0 0 0 0 rgba(126,73,255,0)}}
+.btn-secondary{background:rgba(255,255,255,.09); color:#fff}
+.btn-ghost{width:100%; display:flex; align-items:center; gap:10px; justify-content:center; background:rgba(255,255,255,.06); color:#fff}
+.btn-ghost img{width:18px; height:18px; filter:invert(1); opacity:.9}
+
+/* ======= AUTH (login/register) ======= */
+.auth-body{
+  min-height:100vh; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  padding:32px
+}
+
+.auth-shell{
+  display:grid; 
+  grid-template-columns: minmax(320px,480px) minmax(360px,520px); gap:32px; 
+  width:min(1100px,90vw)
+}
+
+.auth-panel{
+  padding:30px
+}
+
+.branding{
+  margin:0 0 8px 0; 
+  font-size:22px
+}
+
+.auth-title{
+  margin:8px 0
+}
+
+.auth-subtitle{
+  color:var(--muted); 
+  margin:0 0 18px 0
+}
+
+
+.auth-form{
+  display:flex; 
+  flex-direction:column; 
+  gap:14px
+}
+
+.field input{
+  width:100%; 
+  padding:12px 14px; 
+  border-radius:12px; 
+  border:1px solid rgba(255,255,255,.12);
+  background:#0f1226; color:var(--ink); outline:none; transition:.2s;
+}
+
+.field input:focus{border-color:#8b5dff; box-shadow:0 0 0 4px rgba(139,93,255,.15)}
+
+.divider{display:flex; align-items:center; gap:12px; margin:18px 0}
+.divider:before,.divider:after{content:""; flex:1; height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent)}
+.divider span{color:var(--muted)}
+.socials{display:grid; gap:10px}
+
+.link{display:inline-block; margin-top:14px; color:#c6b3ff; text-decoration:none}
+.link:hover{text-decoration:underline}
+
+.auth-hero{display:flex; align-items:center; justify-content:center}
+.hero-card{width:100%; padding:22px}
+.hero-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+.pill{padding:6px 10px; border-radius:999px; background:rgba(126,73,255,.18); color:#dec9ff; border:1px solid rgba(126,73,255,.35)}
+.lights span{display:inline-block; width:8px; height:8px; border-radius:50%; background:#7e49ff; box-shadow:0 0 12px #7e49ff; margin-left:6px; opacity:.8; animation:blink 2.6s infinite}
+.lights span:nth-child(2){animation-delay:.4s} .lights span:nth-child(3){animation-delay:.8s}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+.hero-body{display:flex; flex-direction:column; gap:10px}
+.bubble{max-width:80%; padding:10px 14px; border-radius:14px; font-size:.95rem}
+.bubble.you{align-self:flex-end; background:linear-gradient(90deg,#7e49ff,#5aa0ff); color:#fff; -webkit-box-reflect: below 6px linear-gradient(transparent, rgba(0,0,0,.16))}
+.bubble.other{align-self:flex-start; background:rgba(255,255,255,.08); -webkit-box-reflect: below 6px linear-gradient(transparent, rgba(0,0,0,.16))}
+
+/* ======= LISTAS ======= */
+.list{
+  list-style:none; 
+  padding:0; 
+  margin:10px 0
+}
+
+.glass-list li{
+  margin:8px 0
+}
+
+.glass-list .row{
+  display:flex; 
+  align-items:center; 
+  justify-content:space-between; 
+  padding:12px 16px; border-radius:12px; 
+  text-decoration:none; color:var(--ink); 
+  background:rgba(255,255,255,.06); 
+  border:1px solid rgba(255,255,255,.08)
+}
+
+.glass-list .row:hover{
+  background:rgba(255,255,255,.1)
+}
+
+
+/* ======= CHAT ======= */
+.chat-body{
+  min-height:100vh;
+  display:flex; 
+  align-items:stretch; 
+  justify-content:center; 
+  padding:0;
+}
+.chat-layout{
+  display:flex; 
+  width: 100%; 
+  height:100vh
+}
+
+.sidebar{
+  width: 350px; 
+  backdrop-filter:blur(10px)
+}
+
+.sidebar-header{
+  padding:20px; 
+  border-bottom:1px solid rgba(255,255,255,.08)
+}
+
+.search-bar{
+  width:100%; 
+  padding:10px 12px; 
+  border-radius:10px; 
+  border:1px solid rgba(255,255,255,.12); 
+  background:#0f1226; color:var(--ink)
+}
+
+.search-bar:focus{
+  border-color:#8b5dff
+}
+
+.chat-list{
+  flex:1; overflow:auto; 
+  padding:10px 0
+}
+
+.chat-item{
+  display:flex; 
+  justify-content:space-between; 
+  align-items:center; gap:12px; 
+  padding:12px 20px; text-decoration:none; 
+  color:var(--ink);
+  border-radius: 8px;
+}
+
+.chat-item:hover{
+  background:rgba(255,255,255,.06)
+}
+
+.chat-item.active{
+  background:linear-gradient(90deg, rgba(139,93,255,.18), rgba(90,160,255,.18))
+}
+
+.sidebar-footer{
+  padding:16px 20px; border-top:1px solid rgba(255,255,255,.08)
+}
+
+.profile-link{
+  color:#c6b3ff; 
+  text-decoration:none
+}
+
+.chat-main{
+  flex:1; 
+  display:flex; 
+  flex-direction:column; 
+  background: radial-gradient(1200px at 50% -20%, #071a1a 0%, transparent 70%), radial-gradient(1200px at 50% 120%, #0c0f26 0%, transparent 70%);
+}
+
+.chat-header{
+  padding:18px 22px; 
+  border-bottom:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03); backdrop-filter:blur(8px)
+}
+.chat-status{
+  font-size:.85rem; 
+  color:var(--muted)
+}
+
+.chat-messages{
+  flex:1; padding:22px; 
+  overflow:auto; display:flex; 
+  flex-direction:column; 
+  gap:12px
+}
+
+.message{
+  max-width:72%; 
+  padding:12px 16px; 
+  border-radius:14px; 
+  line-height:1.45; 
+  font-size:.95rem;
+  position:relative; 
+  transform:translateY(4px); transition:.15s ease; 
+  -webkit-box-reflect: below 6px linear-gradient(transparent, rgba(0,0,0,.18));
+}
+
+.message.appear{
+  animation:pop .35s ease-out both
+}
+
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)} to{opacity:1;transform:translateY(4px) scale(1)}}
+.message.sent{
+  align-self: flex-end;
+    
+    /* Este es el mismo degradado de tu .btn-primary */
+    background: linear-gradient(90deg, #7a40ff, #5aa0ff); 
+    
+    color: #FFFFFF;
+    
+    /* Mantenemos el box-shadow que ya tenías */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+}
+
+.message.received{
+  align-self:flex-start; 
+  background:#E9E9EB; 
+  color: #1a1a1a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+}
+
+.timestamp{
+  margin-left:6px; 
+  color:#dcdfff; 
+  font-size:.8rem; 
+  opacity:.9
+}
+
+.chat-input{
+  display:flex; 
+  padding:16px 20px; 
+  gap:10px; 
+  border-top:1px solid rgba(255,255,255,.08); 
+  background:rgba(255,255,255,.03); 
+  backdrop-filter:blur(8px)
+}
+
+.chat-input input{flex:1; 
+  padding:12px 14px; 
+  border-radius:12px; 
+  border:1px solid rgba(255,255,255,.12); 
+  background:#0f1226; 
+  color:var(--ink)
+}
+
+.chat-input input:focus{
+  border-color:#8b5dff; 
+  box-shadow:0 0 0 4px rgba(139,93,255,.15)
+}
+
+.chat-input button{
+  padding:0 18px; 
+  border-radius:12px; 
+  background:linear-gradient(90deg,#7e49ff,#5aa0ff); 
+  color:#fff; 
+  border:0; 
+  cursor:pointer; 
+  box-shadow:0 10px 28px rgba(126,73,255,.35)
+}
+
+.chat-input button:hover{
+  filter:brightness(1.06)
+}
+
+
+/* ===== Tamaños mayores para ocupar el espacio ===== */
+.auth-shell.xl{grid-template-columns: minmax(420px,620px) minmax(520px,680px)}
+.auth-panel.huge{padding:40px 36px}
+.btn.big{padding:14px 18px; font-size:1.02rem}
+
+.auth-hero.jumbo{display:flex; align-items:center; justify-content:center}
+.mascot{width:min(640px,90%); padding:26px}
+.mascot .bot{width:100%; height:auto; display:block}
+.mascot-caption{margin-top:14px; display:flex; gap:10px; flex-direction:column}
+.mascot .bubble{max-width:70%; padding:10px 14px; border-radius:14px; font-size:.95rem}
+.mascot .bubble.you{align-self:flex-end; background:linear-gradient(90deg,#7e49ff,#5aa0ff); -webkit-box-reflect: below 6px linear-gradient(transparent, rgba(0,0,0,.16))}
+.mascot .bubble.other{align-self:flex-start; background:rgba(255,255,255,.08); -webkit-box-reflect: below 6px linear-gradient(transparent, rgba(0,0,0,.16))}
+
+/* ===== Botón/forma “Iniciar conversación” ===== */
+.newchat{display:flex; gap:8px; margin:10px 0 14px 0; align-items:center}
+.newchat-inline{margin-bottom:18px}
+.newchat-input{
+  flex:1; 
+  padding:10px 12px; 
+  border-radius:12px; 
+  border:1px solid rgba(255,255,255,.12);
+  background:#0f1226; 
+  color:#fff; 
+  outline:none; 
+  transition:.2s;
+  border-radius: 8px;
+}
+
+.newchat-input:focus{border-color:#8b5dff; box-shadow:0 0 0 4px rgba(139,93,255,.15)}
+.btn.small{padding:10px 12px; font-size:.92rem}
+
+/* ===== Sidebar un poco más ancha ===== */
+.sidebar{width:min(360px,34%)}
+
+/* Mejor contraste morado */
+.btn-primary{background:linear-gradient(90deg,#8b5dff,#5aa0ff)}
+.bubble.you,.message.sent{background:linear-gradient(90deg, rgba(139,93,255,.95), rgba(90,160,255,.95))}
+
+/* Izquierda más grande en login */
+.auth-shell.xl-left{
+  grid-template-columns: minmax(520px,680px) minmax(420px,560px);
+}
+
+/* Tres botones en fila en sociales */
+.socials.three{display:grid; grid-template-columns: repeat(3,1fr); gap:10px}
+.socials.two{display:grid; grid-template-columns: repeat(2,1fr); gap:10px}
+.btn-ghost img{width:18px;height:18px;filter:invert(1);opacity:.9}
+
+/* Barra superior del sidebar */
+.sidebar-top{padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar-actions{display:flex; align-items:center; gap:10px; margin-bottom:10px}
+.dots i{display:inline-block; width:8px; height:8px; border-radius:50%; background:#8b5dff; margin-right:4px; box-shadow:0 0 8px #8b5dff}
+
+/* Perfil abajo estilo WhatsApp */
+.profile-card{
+  display:flex; align-items:center; gap:10px; padding:10px 12px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+}
+.profile-card img{width:36px; height:36px; border-radius:50%}
+.profile-card .pinfo{flex:1}
+.profile-card .pname{font-weight:700; font-size:.95rem}
+.profile-card .pmail{font-size:.8rem; color:#9aa3c7}
+.profile-card .pbtn{display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; background:rgba(255,255,255,.08); text-decoration:none; color:#fff}
+
+/* Header derecha con avatar + iconos */
+.chat-header{display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03); backdrop-filter:blur(8px)}
+.peer{display:flex; align-items:center; gap:12px}
+.peer .avatar{width:38px; height:38px; border-radius:50%; border:2px solid rgba(139,93,255,.5)}
+.tools{display:flex; gap:10px}
+.tools .icon{width:36px; height:36px; border-radius:10px; border:0; cursor:pointer; background:rgba(255,255,255,.06); color:#fff}
+.tools .icon:hover{filter:brightness(1.08)}
+
+/* Sidebar un poco más ancha como WhatsApp */
+.sidebar{width:360px}
+
+
+/*
+========================================
+--- ZONA RESPONSIVE (MÓVILES) ---
+========================================
+Esto se aplica solo a pantallas de 768px o menos
+*/
+
+@media (max-width: 768px) {
+
+    /* --- 1. Arreglos para Login y Registro --- */
+
+    .auth-shell-xl-left,
+    .auth-shell-md-center {
+        /* Tu layout original tiene 2 columnas (formulario + mascota)
+           En móvil, lo forzamos a 1 SOLA columna */
+        grid-template-columns: 1fr;
+        width: 100%;
+        padding: 15px; /* Menos padding en el móvil */
+    }
+
+    /* Ocultamos la mascota (el panel derecho) en móviles */
+    .auth-panel.hero,
+    aside.auth-hero.jumbo {
+        display: none;
+    }
+
+    .auth-panel.huge {
+        /* Hacemos que el panel de formulario ocupe todo el ancho */
+        max-width: 100%;
+        padding: 20px;
+    }
+
+
+    /* --- 2. Arreglos para la Página de Chat --- */
+    
+    /* Ocultamos la barra lateral (lista de chats) */
+    .sidebar-width {
+        display: none; 
+    }
+
+    /* Hacemos que la ventana de chat ocupe el 100% */
+    .chat-main {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        border-left: none; /* Quitamos bordes que sobran */
+    }
+
+    /* Hacemos que el header del chat ocupe todo */
+    .chat-header {
+        padding: 12px 15px;
+    }
+
+    /* Hacemos que la caja de escribir ocupe todo */
+    .chat-layout > footer {
+        padding: 12px 15px;
+    }
+
+
+    /* --- 3. Arreglos para la Lista de Chats --- */
+
+    /* Hacemos que la lista de chats ocupe todo el ancho */
+    .chat-list {
+        width: 100%;
+        max-width: 100%;
+    }
+
+
+    /* --- 4. Arreglos para el Perfil --- */
+
+    .profile-card {
+        flex-direction: column; /* Ponemos los elementos uno abajo de otro */
+        align-items: center;   /* Centramos */
+        padding: 20px;
+    }
+
+    .profile-card-img {
+        margin-bottom: 20px; /* Damos espacio entre la foto y el texto */
+    }
+
+}
+
+/* --- NUEVO CSS PARA EL LAYOUT DEL SIDEBAR --- */
+
+.sidebar {
+    /* Forzamos el sidebar a usar flexbox en columna */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* <-- ¡La magia! Empuja el footer abajo */
+    height: 100vh;
+}
+
+.sidebar-content-top {
+    /* Esta sección crece y permite scroll si hay muchos chats */
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px; /* Añadimos padding aquí */
+}
+
+.sidebar-nav-bottom {
+    /* Esta sección queda fija abajo */
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1); /* Separador */
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Espacio entre los nuevos botones */
+}
+
+/* --- Estilos para los nuevos botones de navegación --- */
+.nav-item {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 500;
+}
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+/* --- Hacemos que la tarjeta de perfil sea clickeable --- */
+.profile-card {
+    cursor: pointer; /* Indica que se puede hacer clic */
+    margin-top: 8px;
+}
+
+.profile-card .setting-icon {
+    /* Estilo para el ícono de engranaje que puse */
+    font-size: 1.2rem;
+    margin-left: auto;
+    color: var(--muted);
+    transition: all 0.2s ease;
+}
+.profile-card:hover .setting-icon {
+    transform: rotate(30deg);
+    color: #fff;
+}
+
+/* --- Arreglos en el formulario de chat --- */
+.newchat-form {
+    display: flex;
+    gap: 8px;
+}
+.newchat-input {
+    flex: 1; /* El input de texto ocupa el espacio */
+}
+.btn-primary.small {
+    padding: 8px 12px;
+}
+
+/* --- Estilos para el Modal de Crear Room --- */
+.modal {
+    display: none; /* Oculto por defecto */
+    position: fixed; /* Fijo en la pantalla */
+    z-index: 1; /* Encima de todo */
+    left: 0;
+    top: 0;
+    width: 100%; /* Cubre toda la pantalla */
+    height: 100%;
+    overflow: auto; /* Habilita scroll si es necesario */
+    background-color: rgba(0,0,0,0.6); /* Fondo semi-transparente */
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: #1a1a2e; /* Color similar a tu tema */
+    padding: 30px;
+    border-radius: 12px;
+    position: relative;
+    width: 90%;
+    max-width: 450px; /* Ancho máximo de la ventana */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    text-align: center;
+    color: #fff;
+}
+
+.close-button {
+    color: var(--muted);
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Estilos del formulario dentro del modal */
+.modal-content .newchat-form {
+    flex-direction: column; /* Input y botón apilados */
+    gap: 15px;
+}
+.modal-content .newchat-input {
+    width: calc(100% - 24px); /* Ajustar padding */
+}
+.modal-content .btn-primary {
+    width: 100%;
+}

@@ -1,22 +1,94 @@
 {% extends "base.html" %}
 {% set body_class = 'auth-body' %}
-{% block title %}Inicio{% endblock %}
+{% block title %}Bienvenido a Wavvi{% endblock %}
+
 {% block content %}
 <div class="auth-shell">
-  <section class="auth-panel glass">
-    <h2 class="auth-title">Hola, {{ current_user.name }}</h2>
-    <p class="auth-subtitle">Elige un chat para comenzar</p>
-    <ul class="list glass-list">
-      {% for r in rooms %}
-        <li><a class="row" href="{{ url_for('main.chat', room_id=r.id) }}"><span>{{ r.name }}</span> →</a></li>
-      {% else %}
-        <li><span>No hay salas aún</span></li>
-      {% endfor %}
-    </ul>
-    <div class="actions-inline">
-      <a class="link" href="{{ url_for('main.chats') }}">Ver todos los chats</a>
-      <a class="link" href="{{ url_for('auth.logout') }}">Salir</a>
-    </div>
-  </section>
+
+    <section class="auth-panel glass">
+        
+        <div class="branding">
+            <span class="gradient-text">Wavvi</span>
+        </div>
+        
+        <h2 class="auth-title">Tu nuevo espacio de chat</h2>
+        <p class="auth-subtitle" style="max-width: 300px; text-align: center;">
+            Conéctate, colabora y conversa en un solo lugar.
+        </p>
+
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">
+            Ir a chats
+        </a>
+    </section>
+
+    <aside class="side auth-hero jumbo">
+        <svg viewBox="0 0 200 200" class="bot">
+            <defs>
+                <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#7a40ff" /><stop offset="1" stop-color="#5aa0ff" />
+                </linearGradient>
+            </defs>
+            <rect x="40" y="40" width="120" height="90" rx="10" fill="url(#g1)" />
+            <circle cx="80" cy="80" r="10" fill="#fff"><animate attributeName="r" values="10;8;10" dur="2s" repeatCount="indefinite" /></circle>
+            <circle cx="120" cy="80" r="10" fill="#fff"><animate attributeName="r" values="10;8;10" dur="2.2s" repeatCount="indefinite" /></circle>
+            <line x1="100" y1="30" x2="100" y2="10" stroke="#cfd4ff" stroke-width="4"><animate attributeName="y2" values="10;6;10" dur="1.8s" repeatCount="indefinite" /></line>
+            <circle cx="100" cy="8" r="6" fill="#cfd4ff"><animate attributeName="cy" values="8;5;8" dur="1.8s" repeatCount="indefinite" /></circle>
+            <rect x="55" y="120" width="40" height="40" rx="12" fill="rgba(255,255,255,.1)" />
+        </svg>
+    </aside>
+
 </div>
+
+<style>
+    .auth-shell {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* Usamos la estructura de 2 columnas de 'login.html' */
+        display: grid;
+        grid-template-columns: minmax(320px, 480px) minmax(360px, 520px);
+        gap: 32px;
+        width: min(1100px, 90vw);
+    }
+    
+    .auth-panel.glass {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        text-align: center;
+    }
+    
+    .branding {
+        font-size: 3rem; /* Tamaño grande para "Wavvi" */
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    
+    .btn-lg {
+         padding: 14px 20px;
+         font-size: 1.1rem;
+         width: 100%;
+         max-width: 300px;
+         margin-top: 16px;
+    }
+
+    /* Estilos para el robot (copiados de tu style.css o login.html) */
+    .auth-hero.jumbo {
+        aspect-ratio: 1;
+        display: block;
+    }
+    
+    /* En móviles, ocultamos el robot y centramos la tarjeta */
+    @media (max-width: 768px) {
+        .auth-shell {
+            grid-template-columns: 1fr; /* Una sola columna */
+            width: 90%;
+        }
+        .auth-hero.jumbo {
+            display: none; /* Ocultamos el robot */
+        }
+    }
+</style>
 {% endblock %}

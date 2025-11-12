@@ -4,16 +4,34 @@ from . import main_bp
 from ..models import Room, Message, db
 
 @main_bp.get("/")
-@login_required
 def index():
-    rooms = Room.query.order_by(Room.name.asc()).all()
-    return render_template("index.html", rooms=rooms)
+    if current_user.is_authenticated:
+        # Si ya está logueado, no mostramos la bienvenida, lo mandamos a los chats.
+        return redirect(url_for('main.chats'))
+    
+    # Si no está logueado, le mostramos la nueva página de aterrizaje.
+    return render_template("index.html")
+
+# (La siguiente ruta, "@main_bp.get("/chats")", empieza aquí)
 
 @main_bp.get("/chats")
 @login_required
 def chats():
-    rooms = Room.query.order_by(Room.name.asc()).all()
-    return render_template("chats.html", rooms=rooms)
+    # Esta ruta ahora es un "redirigidor inteligente"
+    
+    # 1. Busca la primera sala pública disponible
+    room = Room.query.filter_by(is_private=False).order_by(Room.name.asc()).first()
+    
+    if room:
+        # 2. Si existe al menos una, te manda a esa.
+        return redirect(url_for('main.chat', room_id=room.id))
+    else:
+        # 3. Si no hay NINGUNA sala, crea una "General" para que no te atores.
+        general_room = Room(name="General", is_private=False)
+        db.session.add(general_room)
+        db.session.commit()
+        # Y te manda a la sala que acaba de crear
+        return redirect(url_for('main.chat', room_id=general_room.id))
 
 @main_bp.get("/chat/<int:room_id>")
 @login_required
@@ -41,3 +59,8 @@ def create_room():
 @login_required
 def perfil():
     return render_template("perfil.html")
+
+@main_bp.get("/settings")
+@login_required
+def settings():
+    return render_template("settings.html")

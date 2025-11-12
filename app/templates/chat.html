@@ -1,85 +1,82 @@
 {% extends "base.html" %}
 {% set body_class = 'chat-body' %}
 {% block title %}Chat - {{ room.name }}{% endblock %}
+
 {% block content %}
 <div class="chat-layout">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar glass">
-    <div class="sidebar-top">
-      <div class="sidebar-actions">
-        <span class="dots"><i></i><i></i><i></i></span>
-        <h2>Chats</h2>
-      </div>
-      <form class="newchat" action="{{ url_for('main.create_room') }}" method="post">
-        <input class="newchat-input" name="room_name" placeholder="Nombre de la conversación">
-        <button class="btn btn-primary small" type="submit">➕</button>
-      </form>
-      <input class="search-bar" placeholder="Buscar chat...">
-    </div>
+    <aside class="sidebar sidebar-width glass">
 
-    <div class="chat-list">
-      {% for r in rooms %}
-        <a class="chat-item {% if r.id == room.id %}active{% endif %}" href="{{ url_for('main.chat', room_id=r.id) }}">
-          <div class="chat-info">
-            <span class="chat-name">{{ r.name }}</span>
-            <span class="chat-msg">{% if r.id == room.id %}Abierto{% else %}&nbsp;{% endif %}</span>
-          </div>
-          <span class="chat-time">→</span>
-        </a>
-      {% endfor %}
-    </div>
+        <div class="sidebar-content-top">
+            
+            <div class="sidebar-top">
+                <h3><span class="dots"><i></i><i></i><i></i></span> Chats</h3>
+            </div>
 
-    <!-- PERFIL ABAJO -->
-    <div class="sidebar-footer">
-      <div class="profile-card">
-        <img src="{{ current_user.avatar_url or 'https://i.pravatar.cc/100' }}" alt="">
-        <div class="pinfo">
-          <div class="pname">{{ current_user.name }}</div>
-          <div class="pmail">{{ current_user.email }}</div>
+            <div class="sidebar-actions">
+                <form class="newchat-form" action="{{ url_for('main.create_room') }}" method="post">
+                    <input class="newchat-input" name="room_name" placeholder="Nombre de la conversación" required>
+                    <button class="btn-primary small" type="submit">+</button>
+                </form>
+            </div>
+
+            <div class="chat-list">
+                {% for r in rooms %}
+                    <a class="chat-item {% if r.id == room.id %}active{% endif %}" href="{{ url_for('main.chat', room_id=r.id) }}">
+                        <span class="chat-name">{{ r.name }}</span>
+                        <span class="chat-msg">{% if r.id == room.id %}Abierto{% else %}&nbsp;{% endif %}</span>
+                    </a>
+                {% endfor %}
+            </div>
         </div>
-        <a class="pbtn" title="Perfil" href="{{ url_for('main.perfil') }}">⚙</a>
-      </div>
-    </div>
-  </aside>
 
-  <!-- PANEL DERECHO -->
-  <section class="chat-main">
-    <!-- Header de la conversación -->
-    <div class="chat-header">
-      <div class="peer">
-        <img class="avatar" src="https://i.pravatar.cc/120?u={{ room.id }}" alt="">
-        <div>
-          <h3>{{ room.name }}</h3>
-          <div class="chat-status">Activo hace 1 min</div>
+        <div class="sidebar-nav-bottom">
+            <a class="nav-item" href="{{ url_for('main.settings') }}">
+                <span>Configuración</span>
+            </a>
+            <a class="nav-item" href="{{ url_for('auth.logout') }}">
+                <span>Cerrar Sesión</span>
+            </a>
+            <div class="profile-card" title="Ir a mi perfil" onclick="window.location.href='{{ url_for('main.perfil') }}';">
+                <img src="{{ current_user.avatar(100) }}" alt="">
+                <div class="profile-card-info">
+                    <span class="pname">{{ current_user.name }}</span>
+                    <span class="pmail">{{ current_user.email }}</span>
+                </div>
+                <i class="setting-icon">⚙️</i>
+            </div>
         </div>
-      </div>
-      <div class="tools">
-        <button class="icon" title="Llamada">📞</button>
-        <button class="icon" title="Video">🎥</button>
-        <button class="icon" title="Buscar">🔎</button>
-      </div>
-    </div>
-
-    <!-- Historial -->
-    <div id="messages" class="chat-messages">
-      {% for m in messages %}
-        <div class="message {% if m.user.id == current_user.id %}sent{% else %}received{% endif %}">
-          <strong>{{ m.user.name }}</strong>
-          <span class="timestamp">[{{ m.created_at.strftime("%H:%M") }}]</span>
-          <div>{{ m.body }}</div>
+    </aside>
+    <section class="chat-main">
+        
+        <div class="chat-header">
+            <div class="peer">
+                <img class="avatar" src="{{ room.room_avatar(120) }}" alt="">
+                <div>
+                    <h3>{{ room.name }}</h3>
+                    <div class="chat-status">Activo hace 1 min</div>
+                </div>
+            </div>
         </div>
-      {% endfor %}
-    </div>
 
-    <!-- Input -->
-    <form id="message-form" class="chat-input">
-      <input id="message-input" placeholder="Escribe un mensaje..." autocomplete="off">
-      <button type="submit">Enviar</button>
-    </form>
-  </section>
+        <div id="messages" class="chat-messages">
+            {% for m in messages %}
+                <div class="message {% if m.user.id == current_user.id %}sent{% else %}received{% endif %}">
+                    <strong>{{ m.user.name }}</strong>
+                    <span class="timestamp">[{{ m.created_at.strftime("%H:%M") }}]</span>
+                    <div>{{ m.body }}</div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <form id="message-form" class="chat-input">
+            <input id="message-input" placeholder="Escribe un mensaje..." autocomplete="off">
+            <button type="submit">Enviar</button>
+        </form>
+    </section>
+    
 </div>
 
-<!-- Boot sin Jinja en <script> -->
 <div id="boot" data-uid="{{ current_user.id }}" data-room="{{ room.id }}"></div>
+
 {% endblock %}

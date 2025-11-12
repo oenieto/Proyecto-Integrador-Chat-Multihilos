@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% set body_class = 'auth-body' %}
+{% block title %}Configuración{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+    <section class="settings-section glass">
+        
+        <h2>Configuración</h2>
+        <p class="settings-subtitle">Preferencias de la aplicación</p>
+
+        <div class="settings-group">
+            <label>Apariencia</label>
+            <div class="settings-option">
+                <span>Modo Oscuro / Claro</span>
+                <label class="switch">
+                    <input type="checkbox" checked> <span class="slider round"></span>
+                </label>
+            </div>
+            <p class="help-text">El modo claro estará disponible próximamente.</p>
+        </div>
+
+        <div class="settings-group">
+            <label>Cuenta</label>
+            <div class="settings-option">
+                <span>Exportar mis datos</span>
+                <button class="btn btn-secondary small" disabled>Exportar</button>
+            </div>
+            <div class="settings-option">
+                <span>Eliminar mi cuenta</span>
+                <button class="btn btn-danger small" disabled>Eliminar</button>
+            </div>
+            <p class="help-text">Estas acciones son permanentes.</p>
+        </div>
+
+
+        <div class="back-link">
+            <a href="{{ url_for('main.chats') }}">Volver a los chats</a>
+        </div>
+
+    </section>
+</div>
+
+<style>
+    .settings-section {
+        display: flex;
+        flex-direction: column;
+        padding: 32px 40px;
+        gap: 24px;
+        width: 90%;
+        max-width: 520px; /* Un poco más ancha que el perfil */
+    }
+    .settings-section h2 {
+        margin: 0;
+        text-align: center;
+    }
+    .settings-subtitle {
+        margin: -20px 0 0 0;
+        text-align: center;
+        color: var(--muted);
+    }
+    .settings-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 20px;
+    }
+    .settings-group label {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    .settings-option {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .help-text {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin: -8px 0 0 0;
+    }
+    .back-link {
+        text-align: center;
+        margin-top: 16px;
+    }
+    .btn.small { padding: 6px 12px; }
+    .btn-danger { background-color: #b91c1c; color: #fff; }
+
+    /* CSS para el Toggle Switch */
+    .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4b5563; transition: .4s; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
+    input:checked + .slider { background-color: var(--brand, #5aa0ff); }
+    input:checked + .slider:before { transform: translateX(22px); }
+    .slider.round { border-radius: 34px; }
+    .slider.round:before { border-radius: 50%; }
+
+    .auth-shell {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+{% endblock %}
