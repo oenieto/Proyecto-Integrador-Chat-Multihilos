@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% set body_class = 'auth-body' %}
+{% block title %}Iniciar Sesión{% endblock %}
+{% block content %}
+<!-- XL: izquierda más grande -->
+<div class="auth-shell xl-left">
+  <!-- PANEL IZQUIERDO: MÁS GRANDE -->
+  <section class="auth-panel glass huge">
+    <h1 class="branding"><span class="gradient-text">Wavii</span></h1>
+    <h2 class="auth-title">Iniciar Sesión</h2>
+    <p class="auth-subtitle">Ingresa tu correo electrónico</p>
+
+    <form class="auth-form" method="post" action="{{ url_for('auth.login_post') }}">
+      <div class="field"><input type="email" name="email" placeholder="Tu correo" required></div>
+      <div class="field"><input type="password" name="password" placeholder="Contraseña" required></div>
+      <button class="btn btn-primary btn-glow big" type="submit">Continuar</button>
+    </form>
+
+    <div class="divider"><span>o</span></div>
+
+    <!-- Botones sociales: Apple + Google + Facebook -->
+
+
+    <a class="link" href="{{ url_for('auth.register') }}">Crear cuenta</a>
+  </section>
+
+  <!-- PANEL DERECHO: mascota sin burbujas (más limpio) -->
+  <aside class="auth-hero jumbo">
+    <div class="mascot glass lift">
+      <svg viewBox="0 0 200 200" class="bot">
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7e49ff"/><stop offset="1" stop-color="#5aa0ff"/>
+        </linearGradient></defs>
+        <rect x="40" y="40" width="120" height="90" rx="18" fill="url(#g1)" />
+        <circle cx="80" cy="80" r="10" fill="#fff"><animate attributeName="r" values="10;8;10" dur="2s" repeatCount="indefinite"/></circle>
+        <circle cx="120" cy="80" r="10" fill="#fff"><animate attributeName="r" values="10;8;10" dur="2.2s" repeatCount="indefinite"/></circle>
+        <line x1="100" y1="30" x2="100" y2="10" stroke="#cfd4ff" stroke-width="4"><animate attributeName="y2" values="10;6;10" dur="1.8s" repeatCount="indefinite"/></line>
+        <circle cx="100" cy="8" r="6" fill="#cfd4ff"><animate attributeName="cy" values="8;5;8" dur="1.8s" repeatCount="indefinite"/></circle>
+        <rect x="55" y="120" width="90" height="40" rx="12" fill="rgba(255,255,255,.15)"/>
+      </svg>
+    </div>
+  </aside>
+</div>
+{% endblock %}
