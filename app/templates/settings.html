@@ -5,19 +5,56 @@
 {% block content %}
 <div class="auth-shell">
     <section class="settings-section glass">
-        
+
         <h2>Configuración</h2>
         <p class="settings-subtitle">Preferencias de la aplicación</p>
+
+        <form method="POST" action="{{ url_for('main.settings') }}" enctype="multipart/form-data" id="settings-form">
+            <div class="settings-group">
+                <label>Perfil</label>
+                <div class="settings-option column">
+                    <span>Foto de Perfil</span>
+                    <div class="avatar-upload">
+                        <img src="{{ current_user.avatar(60) }}" id="avatar-preview">
+                        <div class="file-input-wrapper">
+                            <label for="avatar-input" class="btn btn-secondary small">Elegir archivo</label>
+                            <input id="avatar-input" type="file" name="avatar" accept="image/*"
+                                onchange="previewAvatar(this)" style="display: none;">
+                            <span id="file-name-display" class="file-name">No se eligió ningún archivo</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-option column">
+                    <span>Número de Celular</span>
+                    <div class="phone-input">
+                        <select name="country_code" class="input-select">
+                            <option value="+52" {% if current_user.country_code=='+52' %}selected{% endif %}>🇲🇽 +52
+                            </option>
+                            <option value="+1" {% if current_user.country_code=='+1' %}selected{% endif %}>🇺🇸 +1
+                            </option>
+                            <option value="+34" {% if current_user.country_code=='+34' %}selected{% endif %}>🇪🇸 +34
+                            </option>
+                            <option value="+54" {% if current_user.country_code=='+54' %}selected{% endif %}>🇦🇷 +54
+                            </option>
+                            <option value="+57" {% if current_user.country_code=='+57' %}selected{% endif %}>🇨🇴 +57
+                            </option>
+                        </select>
+                        <input type="tel" name="phone_number" value="{{ current_user.phone_number or '' }}"
+                            placeholder="1234567890">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary small" style="margin-top: 10px;">Guardar Cambios</button>
+            </div>
+        </form>
 
         <div class="settings-group">
             <label>Apariencia</label>
             <div class="settings-option">
-                <span>Modo Oscuro / Claro</span>
+                <span>Modo Claro</span>
                 <label class="switch">
-                    <input type="checkbox" checked> <span class="slider round"></span>
+                    <input type="checkbox" id="theme-toggle"> <span class="slider round"></span>
                 </label>
             </div>
-            <p class="help-text">El modo claro estará disponible próximamente.</p>
         </div>
 
         <div class="settings-group">
@@ -35,7 +72,8 @@
 
 
         <div class="back-link">
-            <a href="{{ url_for('main.chats') }}">Volver a los chats</a>
+            <a href="{{ url_for('main.chats') }}" class="btn btn-secondary"
+                style="width: 100%; text-align: center; display: block; text-decoration: none;">Volver a los chats</a>
         </div>
 
     </section>
@@ -48,17 +86,20 @@
         padding: 32px 40px;
         gap: 24px;
         width: 90%;
-        max-width: 520px; /* Un poco más ancha que el perfil */
+        max-width: 520px;
     }
+
     .settings-section h2 {
         margin: 0;
         text-align: center;
     }
+
     .settings-subtitle {
         margin: -20px 0 0 0;
         text-align: center;
         color: var(--muted);
     }
+
     .settings-group {
         display: flex;
         flex-direction: column;
@@ -66,42 +107,175 @@
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         padding-top: 20px;
     }
+
     .settings-group label {
         font-weight: 600;
         font-size: 1.1rem;
     }
+
     .settings-option {
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
+
+    .settings-option.column {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
     .help-text {
         font-size: 0.8rem;
         color: var(--muted);
         margin: -8px 0 0 0;
     }
+
     .back-link {
         text-align: center;
         margin-top: 16px;
     }
-    .btn.small { padding: 6px 12px; }
-    .btn-danger { background-color: #b91c1c; color: #fff; }
+
+    .btn.small {
+        padding: 6px 12px;
+    }
+
+    .btn-danger {
+        background-color: #b91c1c;
+        color: #fff;
+    }
 
     /* CSS para el Toggle Switch */
-    .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4b5563; transition: .4s; }
-    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
-    input:checked + .slider { background-color: var(--brand, #5aa0ff); }
-    input:checked + .slider:before { transform: translateX(22px); }
-    .slider.round { border-radius: 34px; }
-    .slider.round:before { border-radius: 50%; }
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 28px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #4b5563;
+        transition: .4s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+    }
+
+    input:checked+.slider {
+        background-color: var(--brand, #5aa0ff);
+    }
+
+    input:checked+.slider:before {
+        transform: translateX(22px);
+    }
+
+    .slider.round {
+        border-radius: 34px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
 
     .auth-shell {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Inputs styles */
+    .phone-input {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .input-select {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--ink);
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    .phone-input input {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--ink);
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    .avatar-upload {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .avatar-upload img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
 </style>
+
+<script>
+    // Light Mode Logic (Toggle only)
+    const toggle = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    // Set initial toggle state based on current body class (set by app.js)
+    if (body.classList.contains('light-mode')) {
+        toggle.checked = true;
+    }
+
+    toggle.addEventListener('change', () => {
+        if (toggle.checked) {
+            body.classList.add('light-mode');
+            localStorage.setItem('theme', 'light');
+        } else {
+            body.classList.remove('light-mode');
+            localStorage.setItem('theme', 'dark');
+        }
+    });
+
+    function previewAvatar(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+
+            // Update preview
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('avatar-preview').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+
+            // Update text
+            document.getElementById('file-name-display').textContent = file.name;
+        }
+    }
+</script>
 {% endblock %}

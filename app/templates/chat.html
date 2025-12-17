@@ -8,26 +8,80 @@
     <aside class="sidebar sidebar-width glass">
 
         <div class="sidebar-content-top">
-            
-            <div class="sidebar-top">
-                <h3><span class="dots"><i></i><i></i><i></i></span> Chats</h3>
+
+            <div class="sidebar-top search-container">
+                <input type="text" id="search-input" placeholder="Buscar..." autocomplete="off">
+                <div class="dropdown">
+                    <button class="btn-icon" id="new-chat-btn">+</button>
+                    <div class="dropdown-content" id="dropdown-menu">
+                        <a href="#" onclick="focusSearch()">Nueva Conversación</a>
+                        <a href="#" onclick="showNewRoomModal()">Nuevo Grupo</a>
+                    </div>
+                </div>
             </div>
 
-            <div class="sidebar-actions">
-                <form class="newchat-form" action="{{ url_for('main.create_room') }}" method="post">
-                    <input class="newchat-input" name="room_name" placeholder="Nombre de la conversación" required>
-                    <button class="btn-primary small" type="submit">+</button>
-                </form>
+            <!-- Resultados de búsqueda (oculto por defecto) -->
+            <div id="search-results" class="chat-list" style="display: none;"></div>
+
+            <!-- Formulario oculto para nuevo grupo (modal simulado) -->
+            <div id="new-room-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close" onclick="closeNewRoomModal()">&times;</span>
+                    <h3>Nuevo Grupo</h3>
+                    <form action="{{ url_for('main.create_room') }}" method="post">
+                        <div class="field">
+                            <input class="modal-input" name="room_name" placeholder="Nombre del grupo" required
+                                autocomplete="off">
+                        </div>
+
+                        <div class="field" style="display: flex; gap: 10px; margin-top: 10px;">
+                            <input class="modal-input" id="room-avatar-input" name="avatar_url"
+                                placeholder="URL de imagen o GIF (opcional)" autocomplete="off">
+                            <button type="button" class="btn-secondary small"
+                                onclick="openGifPickerForRoom()">GIF</button>
+                        </div>
+
+                        <div class="participants-section">
+                            <p class="section-title">Seleccionar participantes:</p>
+                            <div class="participants-list">
+                                {% for u in users %}
+                                <label class="participant-item">
+                                    <input type="checkbox" name="participants" value="{{ u.id }}">
+                                    <div class="participant-info">
+                                        <img src="{{ u.avatar(30) }}" class="participant-avatar">
+                                        <span>{{ u.name }}</span>
+                                    </div>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary modal-btn">Crear Grupo</button>
+                    </form>
+                </div>
             </div>
 
-            <div class="chat-list">
-                {% for r in rooms %}
-                    <a class="chat-item {% if r.id == room.id %}active{% endif %}" href="{{ url_for('main.chat', room_id=r.id) }}">
-                        <span class="chat-name">{{ r.name }}</span>
-                        <span class="chat-msg">{% if r.id == room.id %}Abierto{% else %}&nbsp;{% endif %}</span>
-                    </a>
+            <div class="chat-list" id="chat-list-main">
+                <div class="list-header">Rooms</div>
+                {% for r in public_rooms %}
+                <a class="chat-item {% if r.id == room.id %}active{% endif %}"
+                    href="{{ url_for('main.chat', room_id=r.id) }}">
+                    <img src="{{ r.room_avatar(30) }}" class="list-avatar">
+                    <span class="chat-name">{{ r.display_name(me) }}</span>
+                </a>
+                {% endfor %}
+
+                <div class="list-header" style="margin-top: 20px;">Mensajes Directos</div>
+                {% for r in private_rooms %}
+                <a class="chat-item {% if r.id == room.id %}active{% endif %}"
+                    href="{{ url_for('main.chat', room_id=r.id) }}">
+                    <img src="{{ r.room_avatar(30) }}" class="list-avatar">
+                    <span class="chat-name">{{ r.display_name(me) }}</span>
+                </a>
                 {% endfor %}
             </div>
+
+            <!-- Lista de usuarios eliminada en favor del buscador -->
         </div>
 
         <div class="sidebar-nav-bottom">
@@ -37,7 +91,8 @@
             <a class="nav-item" href="{{ url_for('auth.logout') }}">
                 <span>Cerrar Sesión</span>
             </a>
-            <div class="profile-card" title="Ir a mi perfil" onclick="window.location.href='{{ url_for('main.perfil') }}';">
+            <div class="profile-card" title="Ir a mi perfil"
+                onclick="window.location.href='{{ url_for('main.perfil') }}';">
                 <img src="{{ current_user.avatar(100) }}" alt="">
                 <div class="profile-card-info">
                     <span class="pname">{{ current_user.name }}</span>
@@ -48,35 +103,398 @@
         </div>
     </aside>
     <section class="chat-main">
-        
+
         <div class="chat-header">
             <div class="peer">
-                <img class="avatar" src="{{ room.room_avatar(120) }}" alt="">
-                <div>
-                    <h3>{{ room.name }}</h3>
-                    <div class="chat-status">Activo hace 1 min</div>
+                <img class="avatar" src="{{ room.room_avatar() }}" alt="Avatar">
+                <div class="info">
+                    <h3 style="margin:0; font-size:1.1rem">{{ room.display_name(me) }}</h3>
+                    <span class="chat-status">{% if room.is_private %}Chat Privado{% else %}Grupo Público{% endif
+                        %}</span>
+                </div>
+            </div>
+            <div class="tools">
+                <button class="icon" title="Buscar"><i class="fas fa-search"></i></button>
+                <div class="dropdown" style="display:inline-block;">
+                    <button class="icon" title="Opciones" onclick="toggleOptionsMenu()"><i
+                            class="fas fa-ellipsis-v"></i></button>
+                    <div class="dropdown-content right" id="options-menu">
+                        <form action="{{ url_for('main.delete_chat', room_id=room.id) }}" method="post"
+                            onsubmit="return confirm('¿Estás seguro de querer salir de este chat?');">
+                            <button type="submit" class="dropdown-item danger">Eliminar Chat</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="messages" class="chat-messages">
             {% for m in messages %}
-                <div class="message {% if m.user.id == current_user.id %}sent{% else %}received{% endif %}">
-                    <strong>{{ m.user.name }}</strong>
-                    <span class="timestamp">[{{ m.created_at.strftime("%H:%M") }}]</span>
-                    <div>{{ m.body }}</div>
+            <div class="message {% if m.user.id == current_user.id %}sent{% else %}received{% endif %}">
+                <strong>{{ m.user.name }}</strong>
+                <span class="timestamp">[{{ m.created_at.strftime("%H:%M") }}]</span>
+                <div>
+                    {% if m.body.startswith('http') and ('.gif' in m.body or '.jpg' in m.body or '.png' in m.body or
+                    '.webp' in m.body) %}
+                    <img src="{{ m.body }}"
+                        style="max-width: 200px; border-radius: 8px; display: block; margin-top: 5px;">
+                    {% else %}
+                    {{ m.body }}
+                    {% endif %}
                 </div>
+            </div>
             {% endfor %}
         </div>
 
         <form id="message-form" class="chat-input">
+            <button type="button" class="btn-icon" onclick="toggleGifPicker()" title="Enviar GIF">GIF</button>
             <input id="message-input" placeholder="Escribe un mensaje..." autocomplete="off">
             <button type="submit">Enviar</button>
         </form>
+
+        <!-- GIF Picker -->
+        <div id="gif-picker" class="gif-picker glass" style="display: none;">
+            <div class="gif-header">
+                <input type="text" id="gif-search-input" placeholder="Buscar GIF..." autocomplete="off">
+            </div>
+            <div class="gif-categories">
+                <button type="button" onclick="searchGifs('trending')">🔥 Tendencias</button>
+                <button type="button" onclick="searchGifs('happy')">😄 Feliz</button>
+                <button type="button" onclick="searchGifs('sad')">😢 Triste</button>
+                <button type="button" onclick="searchGifs('reaction')">😲 Reacción</button>
+            </div>
+            <div class="gif-grid" id="gif-results">
+                <!-- Los GIFs se cargarán aquí dinámicamente -->
+                <div style="padding: 20px; text-align: center; color: var(--muted);">Busca un GIF o selecciona una
+                    categoría</div>
+            </div>
+        </div>
+
     </section>
-    
+
 </div>
 
 <div id="boot" data-uid="{{ current_user.id }}" data-room="{{ room.id }}"></div>
+
+<script>
+    // Lógica del buscador y dropdown
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
+    const chatListMain = document.getElementById('chat-list-main');
+    const newChatBtn = document.getElementById('new-chat-btn');
+    const dropdownMenu = document.getElementById('dropdown-menu');
+    const optionsMenu = document.getElementById('options-menu');
+    const gifPicker = document.getElementById('gif-picker');
+    let gifTargetInput = null;
+
+    // Toggle dropdown
+    newChatBtn.onclick = (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('show');
+    };
+
+    function toggleOptionsMenu() {
+        optionsMenu.classList.toggle('show');
+    }
+
+    function toggleGifPicker() {
+        gifTargetInput = document.getElementById('message-input');
+        gifPicker.style.display = gifPicker.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function openGifPickerForRoom() {
+        gifTargetInput = document.getElementById('room-avatar-input');
+        gifPicker.style.display = 'block';
+    }
+
+    function sendGif(url) {
+        if (!gifTargetInput) return;
+
+        // Si es el chat, enviamos directo
+        if (gifTargetInput.id === 'message-input') {
+            gifTargetInput.value = url;
+            document.getElementById('message-form').dispatchEvent(new Event('submit'));
+        } else {
+            // Si es el modal, solo llenamos el input
+            gifTargetInput.value = url;
+        }
+
+        gifPicker.style.display = 'none';
+    }
+
+    // Cerrar dropdowns al hacer click fuera
+    window.onclick = (e) => {
+        if (!e.target.matches('#new-chat-btn')) {
+            if (dropdownMenu.classList.contains('show')) dropdownMenu.classList.remove('show');
+        }
+        if (!e.target.closest('.tools')) {
+            if (optionsMenu && optionsMenu.classList.contains('show')) optionsMenu.classList.remove('show');
+        }
+        if (!e.target.closest('.chat-input') && !e.target.closest('#gif-picker')) {
+            gifPicker.style.display = 'none';
+        }
+    };
+
+    function focusSearch() {
+        searchInput.focus();
+    }
+
+    function showNewRoomModal() {
+        document.getElementById('new-room-modal').style.display = 'block';
+    }
+
+    function closeNewRoomModal() {
+        document.getElementById('new-room-modal').style.display = 'none';
+    }
+
+    // Buscador en tiempo real
+    let timeout = null;
+    searchInput.addEventListener('input', function () {
+        clearTimeout(timeout);
+        const query = this.value.trim();
+
+        if (query.length === 0) {
+            searchResults.style.display = 'none';
+            chatListMain.style.display = 'block';
+            return;
+        }
+
+        timeout = setTimeout(() => {
+            fetch(`/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    searchResults.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(user => {
+                            const div = document.createElement('a');
+                            div.className = 'chat-item';
+                            div.href = `/chat/private/${user.id}`;
+                            div.innerHTML = `
+                                <img src="${user.avatar}" class="list-avatar">
+                                <span class="chat-name">${user.name}</span>
+                            `;
+                            searchResults.appendChild(div);
+                        });
+                    } else {
+                        searchResults.innerHTML = '<div class="chat-item">No se encontraron usuarios</div>';
+                    }
+                    chatListMain.style.display = 'none';
+                    searchResults.style.display = 'block';
+                });
+        }, 300);
+    });
+
+    // --- GIF Logic ---
+    const gifSearchInput = document.getElementById('gif-search-input');
+    const gifResults = document.getElementById('gif-results');
+    let gifTimeout = null;
+
+    gifSearchInput.addEventListener('input', function () {
+        clearTimeout(gifTimeout);
+        const query = this.value.trim();
+        if (!query) return;
+
+        gifTimeout = setTimeout(() => {
+            searchGifs(query);
+        }, 500);
+    });
+
+    function searchGifs(query) {
+        gifResults.innerHTML = '<div style="padding:20px; text-align:center;">Cargando...</div>';
+
+        // Usamos la API pública de Tenor (LIVDSRZULELA)
+        const url = `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=LIVDSRZULELA&limit=10`;
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                gifResults.innerHTML = '';
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(gif => {
+                        const img = document.createElement('img');
+                        // Usamos el formato nano o tinygif para ahorrar ancho de banda
+                        img.src = gif.media[0].tinygif.url;
+                        img.onclick = () => sendGif(gif.media[0].gif.url); // Enviamos el de mejor calidad
+                        gifResults.appendChild(img);
+                    });
+                } else {
+                    gifResults.innerHTML = '<div style="padding:20px; text-align:center;">No se encontraron GIFs</div>';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                gifResults.innerHTML = '<div style="padding:20px; text-align:center; color:red;">Error al cargar GIFs</div>';
+            });
+    }
+</script>
+
+<style>
+    .list-header {
+        padding: 5px 20px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .list-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .dropdown-content.right {
+        right: 0;
+        left: auto;
+    }
+
+    .dropdown-item {
+        display: block;
+        width: 100%;
+        padding: 10px 15px;
+        text-align: left;
+        background: none;
+        border: none;
+        color: var(--ink);
+        cursor: pointer;
+    }
+
+    .dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .dropdown-item.danger {
+        color: #ff4d4d;
+    }
+
+    /* GIF Picker Styling */
+    .gif-picker {
+        position: absolute;
+        bottom: 80px;
+        left: 20px;
+        width: 340px;
+        height: 420px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+        z-index: 100;
+        background: rgba(13, 15, 31, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 18px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        transform-origin: bottom left;
+        animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .gif-header {
+        position: relative;
+    }
+
+    #gif-search-input {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.2);
+        color: var(--ink);
+        font-size: 0.95rem;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    #gif-search-input:focus {
+        border-color: var(--purple);
+        background: rgba(0, 0, 0, 0.3);
+        box-shadow: 0 0 0 3px rgba(139, 93, 255, 0.15);
+    }
+
+    .gif-categories {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+        /* Firefox */
+        -ms-overflow-style: none;
+        /* IE 10+ */
+    }
+
+    .gif-categories::-webkit-scrollbar {
+        display: none;
+        /* Chrome/Safari */
+    }
+
+    .gif-categories button {
+        white-space: nowrap;
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .gif-categories button:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: var(--ink);
+        transform: translateY(-1px);
+    }
+
+    .gif-categories button:active {
+        transform: translateY(0);
+    }
+
+    .gif-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        overflow-y: auto;
+        padding-right: 4px;
+        flex: 1;
+    }
+
+    /* Custom Scrollbar for GIF grid */
+    .gif-grid::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .gif-grid::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .gif-grid::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+
+    .gif-grid::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .gif-grid img {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        object-fit: cover;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .gif-grid img:hover {
+        transform: scale(1.03);
+        opacity: 1;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        z-index: 1;
+    }
+</style>
 
 {% endblock %}
