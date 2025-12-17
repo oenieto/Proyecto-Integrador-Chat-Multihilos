@@ -1,0 +1,88 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex; /* Para centrar el contenido */
+    justify-content: center; /* Centrado horizontal */
+    align-items: center; /* Centrado vertical */
+    min-height: 100vh; /* Ocupar toda la altura de la ventana */
+    background: linear-gradient(135deg, #1A1A2E, #2F1A3E, #4A1A4E); /* Degradado de fondo */
+    background-size: 200% 200%; /* Para que el degradado se mueva un poco */
+    animation: gradientAnimation 15s ease infinite; /* Animación de fondo */
+    color: #e0e0e0; /* Color de texto general */
+}
+
+@keyframes gradientAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.container {
+    background-color: rgba(0, 0, 0, 0.4); /* Fondo semi-transparente para el contenedor principal */
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); /* Sombra para dar profundidad */
+    text-align: center;
+    width: 100%;
+    max-width: 400px; /* Ancho máximo del formulario */
+    box-sizing: border-box; /* Incluir padding en el ancho */
+}
+
+.app-name {
+    font-size: 2.2em;
+    color: #f0f0f0;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.create-account-title {
+    font-size: 1.5em;
+    color: #d0d0d0;
+    margin-bottom: 30px;
+    font-weight: normal;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group input {
+    width: calc(100% - 20px); /* Ancho completo menos padding */
+    padding: 12px 10px;
+    border: none;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.1); /* Fondo del input semi-transparente */
+    color: #f0f0f0; /* Color del texto dentro del input */
+    font-size: 1em;
+    outline: none; /* Quitar el contorno al enfocar */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-group input::placeholder {
+    color: #a0a0a0; /* Color del placeholder */
+}
+
+.input-group input:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.5); /* Sombra al enfocar (azul suave) */
+}
+
+.confirm-button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #8A2BE2, #6A5ACD); /* Degradado del botón */
+    color: white;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Sombra para el botón */
+}
+
+.confirm-button:hover {
+    transform: translateY(-2px); /* Pequeño efecto al pasar el ratón */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
