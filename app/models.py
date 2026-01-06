@@ -76,5 +76,52 @@ class Message(db.Model):
     body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # --- Phase 1: Nuevas Funcionalidades ---
+    # Respuestas (Hilos)
+    parent_id = db.Column(db.Integer, db.ForeignKey('message.id'), nullable=True)
+    replies = db.relationship('Message', backref=db.backref('parent', remote_side=[id]), lazy='dynamic')
+
+    # Eliminación lógica (Soft Delete)
+    is_deleted = db.Column(db.Boolean, default=False)
+    deleted_at = db.Column(db.DateTime, nullable=True)
+    
+    # Relaciones existentes
     room = db.relationship('Room', backref=db.backref('messages', lazy=True))
     user = db.relationship('User')
+
+    def to_dict(self):
+        """Helper para serializar el mensaje a JSON"""
+        return {
+            'id': self.id,
+            'user': self.user.name,
+            'user_id': self.user.id,
+            'avatar': self.user.avatar(50),
+            'body': "🚫 Este mensaje fue eliminado" if self.is_deleted else self.body,
+            'is_deleted': self.is_deleted,
+            'created_at': self.created_at.strftime("%H:%M"),
+            'timestamp': self.created_at.isoformat(),
+            'parent_id': self.parent_id,
+            'parent_body': self.parent.body[:50] + "..." if self.parent and not self.parent.is_deleted else None,
+            'parent_user': self.parent.user.name if self.parent else None,
+            'reactions': {r.emoji: [u.user.name for u in self.reactions if u.emoji == r.emoji] for r in self.reactions} 
+            # Nota: La serialización de reacciones puede optimizarse, esto es básico.
+        }
+
+class MessageReaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey('message.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    emoji = db.Column(db.String(10), nullable=False) # 👍, ❤️, 😂, etc.
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User')
+    message = db.relationship('Message', backref=db.backref('reactions', lazy=True))
+
+class Whiteboard(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
+    name = db.Column(db.String(80), nullable=False, default="Sin Título")
+    image_url = db.Column(db.String(255), nullable=False) 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    room = db.relationship('Room', backref=db.backref('whiteboards', lazy='dynamic'))

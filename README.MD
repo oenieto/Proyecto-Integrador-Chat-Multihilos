@@ -15,7 +15,7 @@ Este proyecto desarrolla un servidor de chat concurrente como aplicación web ut
     # En Windows
     python -m venv .venv
     .\.venv\Scripts\activate
-    ```
+    ``
 
 2.  **Instalar dependencias:**
 

@@ -30,18 +30,53 @@ if 'country_code' not in user_columns:
     print("Agregando columna 'country_code' a la tabla user...")
     cursor.execute("ALTER TABLE user ADD COLUMN country_code VARCHAR(5)")
 
-# Verificar qué columnas existen en la tabla room
-cursor.execute("PRAGMA table_info(room)")
-room_columns = [column[1] for column in cursor.fetchall()]
+# ... (código existente)
 
-print("Columnas actuales en 'room':", room_columns)
+# Verificar qué columnas existen en la tabla message
+cursor.execute("PRAGMA table_info(message)")
+message_columns = [column[1] for column in cursor.fetchall()]
+print("Columnas actuales en 'message':", message_columns)
 
-# Agregar columna faltante a la tabla room
-if 'avatar_url' not in room_columns:
-    print("Agregando columna 'avatar_url' a la tabla room...")
-    cursor.execute("ALTER TABLE room ADD COLUMN avatar_url VARCHAR(255)")
+if 'parent_id' not in message_columns:
+    print("Agregando columna 'parent_id' a la tabla message...")
+    cursor.execute("ALTER TABLE message ADD COLUMN parent_id INTEGER REFERENCES message(id)")
+
+if 'is_deleted' not in message_columns:
+    print("Agregando columna 'is_deleted' a la tabla message...")
+    # SQLite no tiene un tipo BOOLEAN nativo estricto, usamos INTEGER 0/1, pero declaramos BOOLEAN para compatibilidad lógica
+    cursor.execute("ALTER TABLE message ADD COLUMN is_deleted BOOLEAN DEFAULT 0")
+
+if 'deleted_at' not in message_columns:
+    print("Agregando columna 'deleted_at' a la tabla message...")
+    cursor.execute("ALTER TABLE message ADD COLUMN deleted_at DATETIME")
+
+# Crear tabla de reacciones si no existe
+print("Verificando tabla 'message_reaction'...")
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS message_reaction (
+    id INTEGER PRIMARY KEY,
+    message_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    emoji VARCHAR(10) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(message_id) REFERENCES message(id),
+    FOREIGN KEY(user_id) REFERENCES user(id)
+)
+""")
+
+# Crear tabla de whiteboards si no existe
+print("Verificando tabla 'whiteboard'...")
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS whiteboard (
+    id INTEGER PRIMARY KEY,
+    room_id INTEGER NOT NULL,
+    image_url VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(room_id) REFERENCES room(id)
+)
+""")
 
 conn.commit()
 conn.close()
 
-print("✅ Migración completada exitosamente!")
+print("✅ Migración Fase 1 (Social) completada exitosamente!")

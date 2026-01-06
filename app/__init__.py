@@ -18,7 +18,12 @@ def create_app(test_config=None, use_statics_folder=False):
         SECRET_KEY=os.environ.get("SECRET_KEY", "dev-key"),
         SQLALCHEMY_DATABASE_URI="sqlite:///" + os.path.join(app.instance_path, "chat.db"),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        UPLOAD_FOLDER=os.path.join(app.root_path, static_folder, 'uploads'),
+        MAX_CONTENT_LENGTH=16 * 1024 * 1024 # 16 MB max limit
     )
+
+    # Crear carpeta de uploads si no existe
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     os.makedirs(app.instance_path, exist_ok=True)
 

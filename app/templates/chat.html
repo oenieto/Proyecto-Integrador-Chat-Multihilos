@@ -64,11 +64,21 @@
             <div class="chat-list" id="chat-list-main">
                 <div class="list-header">Rooms</div>
                 {% for r in public_rooms %}
-                <a class="chat-item {% if r.id == room.id %}active{% endif %}"
-                    href="{{ url_for('main.chat', room_id=r.id) }}">
-                    <img src="{{ r.room_avatar(30) }}" class="list-avatar">
-                    <span class="chat-name">{{ r.display_name(me) }}</span>
-                </a>
+                <div class="chat-item-wrapper" onmouseover="this.querySelector('.edit-room-btn').style.display='block'"
+                    onmouseout="this.querySelector('.edit-room-btn').style.display='none'">
+                    <a class="chat-item {% if r.id == room.id %}active{% endif %}"
+                        href="{{ url_for('main.chat', room_id=r.id) }}">
+                        <img src="{{ r.room_avatar(30) }}" class="list-avatar">
+                        <span class="chat-name">{{ r.display_name(me) }}</span>
+                    </a>
+                    <!-- Botón de Editar oculto por defecto -->
+                    <button class="edit-room-btn"
+                        onclick="openEditRoomModal({{ r.id }}, '{{ r.name }}', '{{ r.avatar_url or '' }}')"
+                        style="display:none; position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:0.9rem; color:#aaa; z-index:10;"
+                        title="Editar info del grupo">
+                        ✏️
+                    </button>
+                </div>
                 {% endfor %}
 
                 <div class="list-header" style="margin-top: 20px;">Mensajes Directos</div>
@@ -114,6 +124,8 @@
                 </div>
             </div>
             <div class="tools">
+                <button class="icon" title="Pizarra" onclick="openWbSelection()">🖌️</button>
+                <button class="icon" title="Resumir Chat" onclick="requestSummary()">🤖</button>
                 <button class="icon" title="Buscar"><i class="fas fa-search"></i></button>
                 <div class="dropdown" style="display:inline-block;">
                     <button class="icon" title="Opciones" onclick="toggleOptionsMenu()"><i
@@ -128,27 +140,342 @@
             </div>
         </div>
 
+        <!-- Summary Modal -->
+        <div id="summary-modal" class="modal" style="display: none; align-items: center; justify-content: center;">
+            <div class="modal-content glass" style="max-width: 600px; width: 90%; animation: pop 0.3s ease;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin:0; color:var(--purple);">✨ Resumen con IA</h3>
+                    <span class="close" onclick="closeSummaryModal()" style="font-size:2rem;">&times;</span>
+                </div>
+                <div id="summary-content"
+                    style="line-height: 1.6; color: #ddd; max-height: 60vh; overflow-y: auto; white-space: pre-wrap;">
+                    <div style="text-align:center; padding: 40px;">
+                        <div class="pulse" style="font-size: 3rem; margin-bottom:20px;">🤖</div>
+                        <p>Analizando conversación...</p>
+                    </div>
+                </div>
+                <div style="margin-top:20px; text-align:right;">
+                    <button class="btn-primary" onclick="closeSummaryModal()">Entendido</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Selección de Pizarra -->
+        <div id="wb-selection-modal" class="modal"
+            style="display: none; align-items: center; justify-content: center; z-index: 2100;">
+            <div class="modal-content glass"
+                style="text-align:center; padding: 30px; width: 400px; animation: pop 0.3s ease;">
+                <span class="close" onclick="closeWbSelection()">&times;</span>
+                <h2 style="margin-bottom: 25px; color: var(--purple);">🖌️ Pizarra</h2>
+
+                <!-- Opciones Principales -->
+                <div id="wb-options-main" style="display: flex; flex-direction: column; gap: 15px;">
+                    <button class="btn-primary" onclick="startNewWhiteboard()"
+                        style="padding: 15px; font-size: 1.1rem; display:flex; align-items:center; justify-content:center; gap:10px;">
+                        ✨ Nueva Pizarra
+                    </button>
+                    <button class="btn-secondary" onclick="showSavedWbList()"
+                        style="padding: 15px; font-size: 1.1rem; display:flex; align-items:center; justify-content:center; gap:10px;">
+                        📂 Cargar Pizarra
+                    </button>
+                </div>
+
+                <!-- Lista de Carga -->
+                <div id="wb-selection-list-container" style="display: none; flex-direction: column; gap: 10px;">
+                    <button class="btn-secondary small" onclick="resetWbSelection()"
+                        style="align-self: flex-start; margin-bottom:10px;">⬅️ Volver</button>
+                    <div id="wb-selection-items" class="wb-list"
+                        style="max-height: 250px; overflow-y: auto; text-align: left; padding-right:5px;">
+                        <!-- Items se inyectan aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Whiteboard Overlay -->
+        <div id="whiteboard-modal" class="whiteboard-overlay" style="display: none;">
+            <div class="wb-toolbar glass">
+                <input type="color" id="wb-color-picker" value="#ffffff" onchange="wbSetColor(this.value)">
+
+                <div class="sep"></div>
+
+                <div class="wb-tool-group">
+                    <button class="wb-btn active" id="tool-pencil" onclick="wbSetTool('pencil')">✏️</button>
+                    <div class="wb-subtools">
+                        <button onclick="wbSetTool('pencil')">✏️ Normal</button>
+                        <button onclick="wbSetTool('marker')">🖍️ Marcador</button>
+                        <button onclick="wbSetTool('pen')">✒️ Fina</button>
+                    </div>
+                </div>
+
+                <div class="wb-tool-group">
+                    <button class="wb-btn" id="tool-shapes" title="Formas">🔶</button>
+                    <div class="wb-subtools">
+                        <button onclick="wbSetTool('rect')">⬜ Rectángulo</button>
+                        <button onclick="wbSetTool('circle')">⭕ Círculo</button>
+                        <button onclick="wbSetTool('triangle')">🔺 Triángulo</button>
+                        <button onclick="wbSetTool('line')">📏 Línea</button>
+                    </div>
+                </div>
+
+                <div class="wb-tool-group">
+                    <button class="wb-btn" id="tool-text" onclick="wbSetTool('text')" title="Texto">A</button>
+                </div>
+
+                <div class="sep"></div>
+
+                <button class="wb-btn" onclick="wbSave()" title="Guardar">💾</button>
+                <button class="wb-btn" onclick="toggleWbHistory()" title="Historial">📚</button>
+                <button class="wb-btn danger" onclick="wbClear()" title="Limpiar">🗑️</button>
+                <div class="sep"></div>
+                <button class="wb-btn" onclick="toggleWhiteboard()">✖️</button>
+            </div>
+
+            <canvas id="wb-canvas"></canvas>
+
+            <!-- Sidebar Historial -->
+            <div id="wb-history-sidebar" class="wb-sidebar glass" style="transform: translateX(100%);">
+                <h3 style="margin-top:0;">Historial</h3>
+                <div id="wb-history-list" class="wb-list"></div>
+            </div>
+        </div>
+
         <div id="messages" class="chat-messages">
             {% for m in messages %}
-            <div class="message {% if m.user.id == current_user.id %}sent{% else %}received{% endif %}">
+            <div id="msg-{{ m.id }}" data-id="{{ m.id }}"
+                class="message {% if m.user.id == current_user.id %}sent{% else %}received{% endif %}"
+                ondblclick="toggleActions('{{ m.id }}')">
+                <!--- ... (rest of messages loop logic unchanged, just anchoring context) ... -->
+                <!-- CSS for Whiteboard -->
+                <style>
+                    .pulse {
+                        animation: pulse-red 1.5s infinite;
+                    }
+
+                    /* Whiteboard Styling */
+                    .whiteboard-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100vw;
+                        height: 100vh;
+                        background: rgba(13, 15, 31, 0.95);
+                        z-index: 2000;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: crosshair;
+                    }
+
+                    #wb-canvas {
+                        background: #1e1e2d;
+                        border-radius: 8px;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                        touch-action: none;
+                        /* Prevent scrolling on touch */
+                    }
+
+                    .wb-toolbar {
+                        position: absolute;
+                        top: 20px;
+                        display: flex;
+                        gap: 10px;
+                        padding: 10px 20px;
+                        border-radius: 50px;
+                        background: rgba(255, 255, 255, 0.1);
+                        backdrop-filter: blur(10px);
+                        align-items: center;
+                    }
+
+                    .wb-btn {
+                        background: none;
+                        border: none;
+                        color: white;
+                        font-size: 1.2rem;
+                        cursor: pointer;
+                        padding: 5px 10px;
+                        border-radius: 8px;
+                        transition: transform 0.2s;
+                    }
+
+                    .wb-btn:hover {
+                        background: rgba(255, 255, 255, 0.1);
+                        transform: scale(1.1);
+                    }
+
+                    .wb-subtools button:hover {
+                        background: rgba(255, 255, 255, 0.1);
+                    }
+
+                    /* Whiteboard List Items (New Design) */
+                    .wb-list-item-row {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 12px 15px;
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                        cursor: pointer;
+                        border-radius: 8px;
+                        transition: background 0.2s;
+                    }
+
+                    .wb-list-item-row:hover {
+                        background: rgba(255, 255, 255, 0.1);
+                    }
+
+                    .wb-list-item-name {
+                        flex-grow: 1;
+                        color: #eee;
+                        font-size: 1rem;
+                        font-weight: 500;
+                    }
+
+                    .wb-list-item-actions {
+                        display: none;
+                        /* Oculto por defecto */
+                        gap: 10px;
+                    }
+
+                    .wb-list-item-row:hover .wb-list-item-actions {
+                        display: flex;
+                        /* Visible en hover */
+                    }
+
+                    .wb-action-btn-mini {
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        font-size: 1.1rem;
+                        padding: 4px;
+                        opacity: 0.6;
+                        transition: all 0.2s;
+                    }
+
+                    .wb-action-btn-mini:hover {
+                        opacity: 1;
+                        transform: scale(1.2);
+                    }
+
+                    .wb-action-btn-mini.edit {
+                        color: #4dabf7;
+                    }
+
+                    .wb-action-btn-mini.del {
+                        color: #ff6b6b;
+                    }
+
+                    .wb-btn.danger {
+                        color: #ff4d4d;
+                    }
+
+                    .sep {
+                        width: 1px;
+                        height: 20px;
+                        background: rgba(255, 255, 255, 0.2);
+                        margin: 0 5px;
+                    }
+
+                    #wb-color-picker {
+                        width: 30px;
+                        height: 30px;
+                        border: none;
+                        border-radius: 50%;
+                        padding: 0;
+                        overflow: hidden;
+                        cursor: pointer;
+                    }
+                </style>
+
+                {% if m.parent %}
+                <div class="reply-context" onclick="scrollToMessage('{{ m.parent.id }}')">
+                    <span class="reply-bar"></span>
+                    <small>Replying to <strong>{{ m.parent.user.name }}</strong></small>
+                    <div class="reply-excerpt">
+                        {% if m.parent.is_deleted %}
+                        <em>Mensaje eliminado</em>
+                        {% else %}
+                        {{ m.parent.body[:30] }}{% if m.parent.body|length > 30 %}...{% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
                 <strong>{{ m.user.name }}</strong>
-                <span class="timestamp">[{{ m.created_at.strftime("%H:%M") }}]</span>
-                <div>
-                    {% if m.body.startswith('http') and ('.gif' in m.body or '.jpg' in m.body or '.png' in m.body or
-                    '.webp' in m.body) %}
-                    <img src="{{ m.body }}"
-                        style="max-width: 200px; border-radius: 8px; display: block; margin-top: 5px;">
+                <span class="timestamp">
+                    [{{ m.created_at.strftime("%H:%M") }}]
+                    {% if m.is_deleted %}<span class="deleted-tag">ELIMINADO</span>{% endif %}
+                </span>
+
+                <div class="msg-content">
+                    {% if m.is_deleted %}
+                    <em style="color:var(--muted); font-style: italic;">🚫 Este mensaje fue eliminado</em>
                     {% else %}
-                    {{ m.body }}
+                    {% set ext = m.body.split('.')[-1].lower() if '.' in m.body else '' %}
+                    {% set is_file = m.body.startswith('http') or m.body.startswith('/static/') %}
+
+                    {% if is_file and ext in ['gif', 'jpg', 'jpeg', 'png', 'webp'] %}
+                    <img src="{{ m.body }}"
+                        style="max-width: 200px; border-radius: 8px; display: block; margin-top: 5px;" loading="lazy">
+
+                    {% elif is_file and ext in ['webm', 'mp3', 'wav', 'ogg'] %}
+                    <audio controls src="{{ m.body }}" style="max-width: 250px; margin-top:5px;"></audio>
+
+                    {% elif is_file and '/static/uploads/' in m.body %}
+                    <div class="file-attachment">
+                        <a href="{{ m.body }}" target="_blank" style="color:var(--purple);">📄 Ver archivo adjunto ({{
+                            ext }})</a>
+                    </div>
+
+                    {% else %}
+                    <div style="white-space: pre-wrap;">{{ m.body }}</div>
+                    {% endif %}
                     {% endif %}
                 </div>
+
+                <!-- Barra de Reacciones -->
+                <div class="reactions-display" id="reactions-{{ m.id }}">
+                    {% for r in m.reactions %}
+                    <span class="reaction-pill" title="{{ r.user.name }}">{{ r.emoji }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Menú de acciones (Hover) -->
+                {% if not m.is_deleted %}
+                <div class="msg-actions" id="actions-{{ m.id }}">
+                    <button onclick="startReply('{{ m.id }}', '{{ m.user.name }}', '{{ m.body|replace("'", "\\'") }}')"
+                        title="Responder">↩️</button>
+                    <button onclick="react('{{ m.id }}', '❤️')" title="Me encanta">❤️</button>
+                    <button onclick="react('{{ m.id }}', '😂')" title="Me divierte">😂</button>
+                    <button onclick="react('{{ m.id }}', '👍')" title="Me gusta">👍</button>
+                    {% if m.user.id == current_user.id %}
+                    <!-- NOTA: Usamos stopPropagation para asegurar que el click llegue al botón -->
+                    <button onclick="event.stopPropagation(); deleteMessage('{{ m.id }}')" style="color:#ff6b6b"
+                        title="Eliminar">🗑️</button>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
 
-        <form id="message-form" class="chat-input">
-            <button type="button" class="btn-icon" onclick="toggleGifPicker()" title="Enviar GIF">GIF</button>
+        <div id="reply-preview-bar" class="reply-preview-bar glass" style="display:none;">
+            <div class="reply-info">
+                <span>Respondiendo a <strong id="reply-to-user">Usuario</strong></span>
+                <small id="reply-to-text">Texto del mensaje...</small>
+            </div>
+            <button class="btn-icon" onclick="cancelReply()">✕</button>
+        </div>
+
+        <input type="file" id="file-upload-input" style="display: none;" onchange="uploadFile(this.files[0])">
+
+        <form id="message-form" class="chat-input" data-reply-id="">
+            <button type="button" class="btn-icon" onclick="document.getElementById('file-upload-input').click()"
+                title="Enviar Archivo/Foto">📎</button>
+            <button type="button" class="btn-icon" onclick="toggleGifPicker()" title="Enviar GIF">👾</button>
             <input id="message-input" placeholder="Escribe un mensaje..." autocomplete="off">
+            <button type="button" class="btn-icon" id="mic-btn" onclick="toggleRecording()"
+                title="Grabar nota de voz">🎤</button>
             <button type="submit">Enviar</button>
         </form>
 
@@ -495,6 +822,324 @@
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         z-index: 1;
     }
+
+    /* --- Phase 1: New Features CSS --- */
+
+    /* Reply Context (Bubble inside message) */
+    .reply-context {
+        font-size: 0.8rem;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 6px 10px;
+        border-radius: 8px;
+        margin-bottom: 6px;
+        border-left: 3px solid var(--purple);
+        cursor: pointer;
+        opacity: 0.8;
+    }
+
+    .reply-context:hover {
+        opacity: 1;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .reply-excerpt {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--muted);
+    }
+
+    /* Reactions */
+    .reactions-display {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+    }
+
+    .reaction-pill {
+        font-size: 0.85rem;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2px 6px;
+        border-radius: 10px;
+        cursor: default;
+    }
+
+    /* Actions Menu (Hover) */
+    .message {
+        position: relative;
+    }
+
+    /* Ensure relative positioning */
+
+    .msg-actions {
+        display: none;
+        /* Hidden by default */
+        position: absolute;
+        top: -34px;
+        /* Move slightly higher */
+        right: 10px;
+        background: rgba(30, 30, 45, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 4px;
+        z-index: 100;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        animation: fadeIn 0.2s;
+    }
+
+    /* SHOW ON HOVER */
+    .message:hover .msg-actions {
+        display: flex;
+        gap: 4px;
+    }
+
+    .msg-actions button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        /* Slightly larger icons */
+        padding: 5px 8px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        color: var(--muted);
+    }
+
+    .msg-actions button:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        transform: scale(1.1);
+    }
+
+    /* Deleted Message */
+    .deleted-tag {
+        font-size: 0.6rem;
+        color: #ff4d4d;
+        border: 1px solid #ff4d4d;
+        padding: 0 4px;
+        border-radius: 4px;
+        margin-left: 5px;
+    }
+
+    /* Reply Preview Bar (above input) */
+    .reply-preview-bar {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        background: rgba(30, 30, 45, 0.95);
+        /* Match main theme slightly darker */
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 5;
+    }
+
+    .reply-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .reply-preview-bar small {
+        opacity: 0.7;
+    }
+
+    @keyframes pulse-red {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7);
+        }
+
+        70% {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 10px rgba(255, 77, 77, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 77, 77, 0);
+        }
+    }
+
+    .pulse {
+        animation: pulse-red 1.5s infinite;
+    }
+
+    /* ESTILOS NUEVOS: Pizarra Avanzada */
+    .wb-btn.active {
+        background: rgba(139, 93, 255, 0.5);
+        border: 1px solid var(--purple);
+        transform: scale(1.1);
+    }
+
+    /* Sidebar Historial */
+    .wb-sidebar {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        width: 300px;
+        background: rgba(20, 20, 30, 0.98);
+        padding: 20px;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 2005;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .wb-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+        max-height: 85vh;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    /* Scrollbar minimalista para el historial */
+    .wb-list::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .wb-list::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+    }
+
+    .wb-item {
+        cursor: pointer;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        transition: all 0.2s;
+    }
+
+    .wb-item:hover {
+        border-color: var(--purple);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .wb-item img {
+        width: 100%;
+        display: block;
+        object-fit: cover;
+        height: 150px;
+        background: #fff;
+        /* Fondo blanco para ver bien el dibujo */
+    }
+
+    .wb-item small {
+        display: block;
+        padding: 8px;
+        color: #aaa;
+        font-size: 0.8rem;
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    /* Tool Dropdowns */
+    .wb-tool-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .wb-subtools {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background: rgba(20, 20, 30, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 5px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.2s;
+        min-width: 120px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .wb-tool-group:hover .wb-subtools {
+        opacity: 1;
+        pointer-events: all;
+        transform: translateX(-50%) translateY(5px);
+    }
+
+    .wb-subtools button {
+        background: none;
+        border: none;
+        color: white;
+        text-align: left;
+        padding: 8px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+
+    .wb-subtools button:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Room Edit Wrapper */
+    .chat-item-wrapper {
+        position: relative;
+    }
+
+    .edit-room-btn:hover {
+        color: white !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 50%;
+    }
 </style>
 
+<!-- Edit Room Modal -->
+<div id="edit-room-modal" class="modal" style="display: none;">
+    <div class="modal-content glass">
+        <span class="close" onclick="document.getElementById('edit-room-modal').style.display='none'">&times;</span>
+        <h3 style="color:var(--purple);">Editar Grupo</h3>
+        <form action="{{ url_for('main.update_room') }}" method="post">
+            <input type="hidden" name="room_id" id="edit-room-id">
+
+            <div class="field">
+                <label style="color:#aaa; font-size:0.9rem;">Nombre del Grupo</label>
+                <input class="modal-input" name="name" id="edit-room-name" required autocomplete="off">
+            </div>
+
+            <div class="field" style="margin-top:15px;">
+                <label style="color:#aaa; font-size:0.9rem;">Avatar (URL o GIF)</label>
+                <div style="display:flex; gap:10px;">
+                    <input class="modal-input" name="avatar_url" id="edit-room-avatar" placeholder="https://..."
+                        autocomplete="off">
+                    <button type="button" class="btn-secondary small" onclick="openGifPickerForEditRoom()">GIF</button>
+                </div>
+            </div>
+
+            <div style="margin-top:20px; text-align:right;">
+                <button type="submit" class="btn-primary modal-btn">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditRoomModal(id, name, avatar) {
+        document.getElementById('edit-room-modal').style.display = 'block';
+        document.getElementById('edit-room-id').value = id;
+        document.getElementById('edit-room-name').value = name;
+        document.getElementById('edit-room-avatar').value = avatar;
+    }
+
+    function openGifPickerForEditRoom() {
+        gifTargetInput = document.getElementById('edit-room-avatar');
+        // Usamos la logica de GIF existing
+        document.getElementById('gif-picker').style.display = 'block';
+    }
+</script>
 {% endblock %}
