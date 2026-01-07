@@ -14,13 +14,22 @@ def create_app(test_config=None, use_statics_folder=False):
     app = Flask(__name__, instance_relative_config=True,
                 static_folder=static_folder, template_folder="templates")
 
+    # Cargar variables de entorno desde .env si existe
+    from dotenv import load_dotenv
+    load_dotenv()
+
     app.config.from_mapping(
         SECRET_KEY=os.environ.get("SECRET_KEY", "dev-key"),
-        SQLALCHEMY_DATABASE_URI="sqlite:///" + os.path.join(app.instance_path, "chat.db"),
+        # Usar DATABASE_URL del entorno si existe, sino usar SQLite local
+        SQLALCHEMY_DATABASE_URI=os.environ.get("DATABASE_URL", "sqlite:///" + os.path.join(app.instance_path, "chat.db")),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         UPLOAD_FOLDER=os.path.join(app.root_path, static_folder, 'uploads'),
         MAX_CONTENT_LENGTH=16 * 1024 * 1024 # 16 MB max limit
     )
+
+    # SQLAlchemy 1.4+ requiere postgresql:// en lugar de postgres://
+    if app.config["SQLALCHEMY_DATABASE_URI"] and app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgres://"):
+        app.config["SQLALCHEMY_DATABASE_URI"] = app.config["SQLALCHEMY_DATABASE_URI"].replace("postgres://", "postgresql://", 1)
 
     # Crear carpeta de uploads si no existe
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
